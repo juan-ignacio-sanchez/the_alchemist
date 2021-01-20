@@ -26,8 +26,16 @@ class Walker(Sprite):
         self.center_position += self.velocity
         self.rect.center = self.center_position
 
+    def bounce(self):
+        if not 0 < self.center_position.x < self.surface.get_width():
+            self.velocity.x *= -1
+
+        if not 0 < self.center_position.y < self.surface.get_height():
+            self.velocity.y *= -1
+
     def update(self, *args, **kwargs) -> None:
         self.move()
+        self.bounce()
 
     def on_key_pressed(self, key):
         if key == pygame.K_RIGHT:
@@ -47,6 +55,7 @@ def main():
     display_size = Size(width=600, height=480)
     screen = pygame.display.set_mode(display_size, pygame.RESIZABLE)
     player = Walker(screen)
+    player.velocity = Vector2(3, 7)
     all_sprites = pygame.sprite.RenderUpdates(player)
 
     screen.fill('black')
