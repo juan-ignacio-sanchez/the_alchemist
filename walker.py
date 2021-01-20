@@ -7,6 +7,10 @@ from fps.fps import display_fps
 
 Size = namedtuple('Size', ['width', 'height'])
 
+STATE_ASCENDING = 0
+STATE_DESCENDING = 1
+STATE_STANDING = 2
+
 
 class Walker(Sprite):
     def __init__(self, surface: pygame.Surface):
@@ -18,13 +22,28 @@ class Walker(Sprite):
         self.rect = self.image.get_rect()
         self.rect.y = surface.get_height() - self.rect.height - 10
 
+        self.current_state = STATE_STANDING
+        self.jumping = False
+
+    def update(self, *args, **kwargs) -> None:
+        if self.current_state == STATE_ASCENDING:
+            if self.rect.y + self.rect.height > self.surface.get_height() - 20:
+                self.rect.y -= 1
+            else:
+                self.current_state = STATE_DESCENDING
+        elif self.current_state == STATE_DESCENDING:
+            self.rect.y += 1
+            if self.rect.y + self.rect.height >= self.surface.get_height():
+                self.rect.y = self.surface.get_height() - self.rect.height
+                self.current_state = STATE_STANDING
+
     def on_key_pressed(self, key):
         if key == pygame.K_RIGHT:
             self.rect = self.rect.move(10, 0)
         elif key == pygame.K_LEFT:
             self.rect = self.rect.move(-10, 0)
         elif key == pygame.K_SPACE:
-            pass  # Let it Jump!
+            self.current_state = STATE_ASCENDING
 
 def main():
     pygame.init()
