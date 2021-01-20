@@ -16,7 +16,8 @@ FACING_WEST = 1
 
 
 class Walker(Sprite):
-    def __init__(self, surface: pygame.Surface, image: pygame.Surface, skin='OLD_MAN', facing=FACING_EAST):
+    def __init__(self, surface: pygame.Surface, image: pygame.Surface, skin='OLD_MAN', facing=FACING_EAST,
+                 initial_position=(0, 0)):
         super().__init__()
         self.surface = surface
 
@@ -28,7 +29,7 @@ class Walker(Sprite):
         self.facing = facing
 
         self.rect = self.image.get_rect()
-        self.rect.y = surface.get_height() - self.rect.height - 10
+        self.rect.center = initial_position
 
         self.center_position = Vector2(self.rect.center)
         self.velocity = Vector2(0, 0)
@@ -43,8 +44,11 @@ class Walker(Sprite):
     def apply_force(self, force: Vector2):
         self.acceleration += force
 
+    def apply_gravity(self):
+        self.apply_force(Vector2(0, .2))
+
     def move(self):
-        self.apply_force(Vector2(0, .3))
+        self.apply_gravity()
         self.velocity += self.acceleration
         self.center_position += self.velocity
         self.rect.center = self.center_position
@@ -80,10 +84,9 @@ class Enemy(Walker):
             self.image = pygame.transform.flip(self.image, True, False)
 
     def update(self, *args, **kwargs) -> None:
-        self.acceleration.update(
-            random.random() / 5.0,
-            -1 ** random.randrange(0, 1) * random.random() / 10.0,
-        )
+        # Follow the player
+        distance_vector = (kwargs.get('player_position') - self.center_position).normalize()
+        self.apply_force(distance_vector * 0.2 / distance_vector.magnitude())
         self.move()
         self.bounce()
         self.change_facing()
@@ -121,14 +124,15 @@ class Player(Walker):
             self.acceleration = Vector2(0, 0)
 
     def on_key_pressed(self, key):
+        magnitude = 2
         if key == pygame.K_RIGHT:
-            self.apply_force(Vector2(1, 0))
+            self.apply_force(Vector2(magnitude, 0))
         elif key == pygame.K_LEFT:
-            self.apply_force(Vector2(-1, 0))
+            self.apply_force(Vector2(-magnitude, 0))
         elif key == pygame.K_UP:
-            self.apply_force(Vector2(0, -1))
+            self.apply_force(Vector2(0, -magnitude))
         elif key == pygame.K_DOWN:
-            self.apply_force(Vector2(0, 1))
+            self.apply_force(Vector2(0, magnitude))
         elif key == pygame.K_s:
             self.next_skin()
 
@@ -157,8 +161,11 @@ def main():
     player = Player(screen, sprites_image)
     player.velocity = Vector2(3, 7)
     # Enemy
-    enemy = Enemy(screen, sprites_image, skin='BLOOD_CRYING_MOB', facing=FACING_WEST)
+    enemy = Enemy(screen, sprites_image,
+                  skin='BLOOD_CRYING_MOB', facing=FACING_WEST,
+                  initial_position=(screen.get_width(), 0))
     enemy.velocity = Vector2(4, 8)
+    mobs_sprites = pygame.sprite.RenderUpdates(enemy)
     all_sprites = pygame.sprite.RenderUpdates(player, enemy)
 
     background = create_background(screen, sprites_image)
@@ -177,7 +184,11 @@ def main():
         screen.blit(background, (0, 0, display_size.width, display_size.height))
         fps_dirty = display_fps(main_clock, screen)
 
-        all_sprites.update()
+        all_sprites.update(player_position=player.center_position)
+
+        if pygame.sprite.spritecollide(player, mobs_sprites, dokill=False):
+            player.kill()
+
         sprites_dirty = all_sprites.draw(screen)
 
         dirty_rects = [fps_dirty] + sprites_dirty
