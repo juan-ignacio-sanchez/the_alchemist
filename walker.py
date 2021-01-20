@@ -2,14 +2,11 @@ from collections import namedtuple
 
 import pygame
 from pygame.sprite import Sprite
+from pygame.math import Vector2
 
 from fps.fps import display_fps
 
 Size = namedtuple('Size', ['width', 'height'])
-
-STATE_ASCENDING = 0
-STATE_DESCENDING = 1
-STATE_STANDING = 2
 
 
 class Walker(Sprite):
@@ -22,28 +19,26 @@ class Walker(Sprite):
         self.rect = self.image.get_rect()
         self.rect.y = surface.get_height() - self.rect.height - 10
 
-        self.current_state = STATE_STANDING
-        self.jumping = False
+        self.center_position = Vector2(self.rect.center)
+        self.velocity = Vector2(0, 0)
+
+    def move(self):
+        self.center_position += self.velocity
+        self.rect.center = self.center_position
 
     def update(self, *args, **kwargs) -> None:
-        if self.current_state == STATE_ASCENDING:
-            if self.rect.y + self.rect.height > self.surface.get_height() - 20:
-                self.rect.y -= 1
-            else:
-                self.current_state = STATE_DESCENDING
-        elif self.current_state == STATE_DESCENDING:
-            self.rect.y += 1
-            if self.rect.y + self.rect.height >= self.surface.get_height():
-                self.rect.y = self.surface.get_height() - self.rect.height
-                self.current_state = STATE_STANDING
+        self.move()
 
     def on_key_pressed(self, key):
         if key == pygame.K_RIGHT:
-            self.rect = self.rect.move(10, 0)
+            self.velocity = Vector2(10, 0)
         elif key == pygame.K_LEFT:
-            self.rect = self.rect.move(-10, 0)
-        elif key == pygame.K_SPACE:
-            self.current_state = STATE_ASCENDING
+            self.velocity = Vector2(-10, 0)
+        elif key == pygame.K_UP:
+            self.velocity = Vector2(0, -10)
+        elif key == pygame.K_DOWN:
+            self.velocity = Vector2(0, 10)
+
 
 def main():
     pygame.init()
