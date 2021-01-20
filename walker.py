@@ -34,6 +34,9 @@ class Walker(Sprite):
         self.velocity = Vector2(0, 0)
         self.acceleration = Vector2(0, 0.1)
 
+        # Sound
+        self.knock = pygame.mixer.Sound("knock.mp3")
+
     def set_skin(self):
         pass
 
@@ -45,9 +48,11 @@ class Walker(Sprite):
     def bounce(self):
         if not 0 < self.center_position.x < self.surface.get_width():
             self.velocity.x *= -1
+            self.knock.play()
 
         if not 0 < self.center_position.y < self.surface.get_height():
             self.velocity.y *= -1
+            self.knock.play()
 
 
 class Enemy(Walker):
@@ -124,6 +129,7 @@ def create_background(screen: pygame.Surface, image: pygame.Surface) -> pygame.S
 
 def main():
     pygame.init()
+    pygame.mixer.init()
     main_clock = pygame.time.Clock()
     run = True
     display_size = Size(width=800, height=600)
