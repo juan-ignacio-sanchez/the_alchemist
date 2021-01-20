@@ -1,0 +1,12 @@
+OLD_MAN = (98, 224, 12, 16)
+PIRATE = (113, 224, 14, 16)
+
+CHARACTERS_DICT = {
+    'OLD_MAN': OLD_MAN,
+    'PIRATE': PIRATE,
+}
+
+CHARACTERS = [
+    'OLD_MAN',
+    'PIRATE',
+]
