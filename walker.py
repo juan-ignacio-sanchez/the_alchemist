@@ -174,9 +174,14 @@ def main():
     main_clock = pygame.time.Clock()
     run = True
     display_size = Size(width=800, height=600)
-    screen = pygame.display.set_mode(display_size, pygame.RESIZABLE, vsync=1)
+    screen = pygame.display.set_mode(display_size, pygame.FULLSCREEN, vsync=1)
     sprites_image = pygame.image.load("assets/sprites/sprites.png").convert()
+    # SOUND
+    bottle_picked = pygame.mixer.Sound("assets/sounds/bottle_picked.ogg")
     player_killed_sound = pygame.mixer.Sound("assets/sounds/kill.ogg")
+    background_sound = pygame.mixer.Sound("assets/sounds/background/Guitar-Mayhem-2.mp3")
+    background_sound.set_volume(0.07)
+    background_sound.play(loops=-1)
     score = 0
 
     # Player
@@ -192,6 +197,7 @@ def main():
     # Items
     mana = Item(screen, sprites_image)
 
+    player_sprites = pygame.sprite.RenderUpdates(player)
     item_sprites = pygame.sprite.RenderUpdates(mana)
     mobs_sprites = pygame.sprite.RenderUpdates(enemy)
     all_sprites = pygame.sprite.RenderUpdates(player, enemy, mana)
@@ -223,18 +229,24 @@ def main():
         # COLISSIONS ++++++++
         if player.alive() and pygame.sprite.spritecollide(player, mobs_sprites, dokill=False):
             player.kill()
-            player_killed_sound.play(maxtime=10)
+            player_killed_sound.play()
 
-        if pygame.sprite.spritecollide(player, item_sprites, dokill=False):
+        if pygame.sprite.spritecollide(player, item_sprites,
+                                       dokill=False,
+                                       collided=pygame.sprite.collide_rect_ratio(0.7)):
             score += 1
+            bottle_picked.play()
             mana.spawn()
         # +++++++++++++++++++
 
-        sprites_dirty = all_sprites.draw(screen)
+        sprites_dirty = item_sprites.draw(screen)
+        sprites_dirty += mobs_sprites.draw(screen)
+        sprites_dirty += player_sprites.draw(screen)
 
         dirty_rects = [score_dirty] + sprites_dirty
 
         pygame.display.update(dirty_rects)
+        # pygame.display.flip()
         main_clock.tick(60)
 
 
