@@ -156,7 +156,7 @@ def main():
     run = True
     display_size = Size(width=800, height=600)
     screen = pygame.display.set_mode(display_size, pygame.RESIZABLE, vsync=1)
-    sprites_image = pygame.image.load("sprites.png").convert()
+    sprites_image = pygame.image.load("assets/sprites/sprites.png").convert()
     player = Player(screen, sprites_image, initial_position=(50, 50))
     player.velocity = Vector2(0, 0)
     # Enemy
