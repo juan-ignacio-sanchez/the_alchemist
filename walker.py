@@ -6,7 +6,7 @@ import pygame
 from pygame.sprite import Sprite
 from pygame.math import Vector2
 
-from fps.fps import display_fps
+from text.text import display_fps, show_score
 from constants import CHARACTERS, CHARACTERS_DICT, MOBS_DICT
 
 Size = namedtuple('Size', ['width', 'height'])
@@ -36,7 +36,7 @@ class Walker(Sprite):
         self.acceleration = Vector2(0, 0)
 
         # Sound
-        self.knock = pygame.mixer.Sound("knock.mp3")
+        self.knock = pygame.mixer.Sound("assets/sounds/boundary_hit.ogg")
 
     def set_skin(self):
         pass
@@ -45,14 +45,13 @@ class Walker(Sprite):
         self.acceleration += force
 
     def apply_gravity(self):
-        self.apply_force(Vector2(0, .2))
+        self.apply_force(Vector2(0, .002))
 
     def move(self):
-        self.apply_gravity()
         self.velocity += self.acceleration
         self.center_position += self.velocity
         self.rect.center = self.center_position
-        self.acceleration *= 0
+        self.acceleration.update(0, 0)
 
     def bounce(self):
         if not 0 < self.center_position.x:
@@ -86,7 +85,7 @@ class Enemy(Walker):
     def update(self, *args, **kwargs) -> None:
         # Follow the player
         distance_vector = (kwargs.get('player_position') - self.center_position).normalize()
-        self.apply_force(distance_vector * 0.2 / distance_vector.magnitude())
+        self.apply_force(distance_vector * 0.3 / (distance_vector.magnitude() * 10))
         self.move()
         self.bounce()
         self.change_facing()
@@ -124,7 +123,7 @@ class Player(Walker):
             self.acceleration = Vector2(0, 0)
 
     def on_key_pressed(self, key):
-        magnitude = 2
+        magnitude = .5
         if key == pygame.K_RIGHT:
             self.apply_force(Vector2(magnitude, 0))
         elif key == pygame.K_LEFT:
@@ -158,13 +157,13 @@ def main():
     display_size = Size(width=800, height=600)
     screen = pygame.display.set_mode(display_size, pygame.RESIZABLE, vsync=1)
     sprites_image = pygame.image.load("sprites.png").convert()
-    player = Player(screen, sprites_image)
-    player.velocity = Vector2(3, 7)
+    player = Player(screen, sprites_image, initial_position=(50, 50))
+    player.velocity = Vector2(0, 0)
     # Enemy
     enemy = Enemy(screen, sprites_image,
                   skin='BLOOD_CRYING_MOB', facing=FACING_WEST,
                   initial_position=(screen.get_width(), 0))
-    enemy.velocity = Vector2(4, 8)
+    enemy.velocity = Vector2(-.5, .5)
     mobs_sprites = pygame.sprite.RenderUpdates(enemy)
     all_sprites = pygame.sprite.RenderUpdates(player, enemy)
 
@@ -183,6 +182,7 @@ def main():
 
         screen.blit(background, (0, 0, display_size.width, display_size.height))
         fps_dirty = display_fps(main_clock, screen)
+        score_dirty = show_score(f'Score: {0}', screen)
 
         all_sprites.update(player_position=player.center_position)
 
@@ -191,7 +191,7 @@ def main():
 
         sprites_dirty = all_sprites.draw(screen)
 
-        dirty_rects = [fps_dirty] + sprites_dirty
+        dirty_rects = [fps_dirty, score_dirty] + sprites_dirty
 
         pygame.display.update(dirty_rects)
         main_clock.tick(60)
