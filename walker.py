@@ -7,12 +7,31 @@ from pygame.sprite import Sprite
 from pygame.math import Vector2
 
 from text.text import display_fps, show_score
-from constants import CHARACTERS, CHARACTERS_DICT, MOBS_DICT
+from constants import CHARACTERS, CHARACTERS_DICT, MOBS_DICT, GREEN_LIQUID_ITEM
 
 Size = namedtuple('Size', ['width', 'height'])
 
 FACING_EAST = 0
 FACING_WEST = 1
+
+
+class Item(Sprite):
+    def __init__(self, surface, image, initial_position=(100, 100)):
+        super().__init__()
+        self.surface = surface
+        self.original_image = image
+        skin_rect = pygame.rect.Rect(GREEN_LIQUID_ITEM)
+        self.image = self.original_image.subsurface(skin_rect)
+        self.image = pygame.transform.scale(self.image, [side * 5 for side in skin_rect.size])
+
+        self.rect = self.image.get_rect()
+        self.rect.center = initial_position
+
+    def spawn(self, position=None):
+        self.rect.center = Vector2(
+            random.randint(100, self.surface.get_width() - 100),
+            random.randint(100, self.surface.get_height() - 100)
+        )
 
 
 class Walker(Sprite):
@@ -157,18 +176,28 @@ def main():
     display_size = Size(width=800, height=600)
     screen = pygame.display.set_mode(display_size, pygame.RESIZABLE, vsync=1)
     sprites_image = pygame.image.load("assets/sprites/sprites.png").convert()
+    player_killed_sound = pygame.mixer.Sound("assets/sounds/kill.ogg")
+    score = 0
+
+    # Player
     player = Player(screen, sprites_image, initial_position=(50, 50))
     player.velocity = Vector2(0, 0)
+
     # Enemy
     enemy = Enemy(screen, sprites_image,
                   skin='BLOOD_CRYING_MOB', facing=FACING_WEST,
                   initial_position=(screen.get_width(), 0))
     enemy.velocity = Vector2(-.5, .5)
+
+    # Items
+    mana = Item(screen, sprites_image)
+
+    item_sprites = pygame.sprite.RenderUpdates(mana)
     mobs_sprites = pygame.sprite.RenderUpdates(enemy)
-    all_sprites = pygame.sprite.RenderUpdates(player, enemy)
+    all_sprites = pygame.sprite.RenderUpdates(player, enemy, mana)
 
     background = create_background(screen, sprites_image)
-    screen.blit(background, (0, 0))
+    screen.blit(background, (0, 0, display_size.width, display_size.height))
     pygame.display.flip()
     pygame.key.set_repeat(1, 35)
     while run:
@@ -180,18 +209,30 @@ def main():
             elif event.type == pygame.KEYUP:
                 player.on_key_released(event.key)
 
+        # TODO: remove this line (**)
         screen.blit(background, (0, 0, display_size.width, display_size.height))
-        fps_dirty = display_fps(main_clock, screen)
-        score_dirty = show_score(f'Score: {0}', screen)
+
+        # TODO: convert Score into a Sprite
+        score_dirty = show_score(f'Score: {score}', screen)
+
+        # TODO: (**) in favor of clearing sprites
+        all_sprites.clear(screen, background)
 
         all_sprites.update(player_position=player.center_position)
 
-        if pygame.sprite.spritecollide(player, mobs_sprites, dokill=False):
+        # COLISSIONS ++++++++
+        if player.alive() and pygame.sprite.spritecollide(player, mobs_sprites, dokill=False):
             player.kill()
+            player_killed_sound.play(maxtime=10)
+
+        if pygame.sprite.spritecollide(player, item_sprites, dokill=False):
+            score += 1
+            mana.spawn()
+        # +++++++++++++++++++
 
         sprites_dirty = all_sprites.draw(screen)
 
-        dirty_rects = [fps_dirty, score_dirty] + sprites_dirty
+        dirty_rects = [score_dirty] + sprites_dirty
 
         pygame.display.update(dirty_rects)
         main_clock.tick(60)
