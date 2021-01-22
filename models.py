@@ -152,3 +152,17 @@ class Player(Walker):
     def update(self, *args, **kwargs) -> None:
         self.move()
         self.bounce()
+
+
+class Score(Sprite):
+    def __init__(self, surface):
+        super().__init__()
+        self.surface = surface
+        # upper left corner with a font size of 64
+        # the number 200 for the width is arbitrary
+        self.rect = pygame.rect.Rect(0, 0, 200, 64)
+        self.fnt = pygame.font.SysFont("Arial", 32)  # FIXME: adjust size
+        self.value = 0
+
+    def update(self, *args, **kwargs) -> None:
+        self.image = self.fnt.render(f"Score: {self.value}", False, pygame.color.Color("white"))

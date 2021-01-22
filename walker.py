@@ -3,9 +3,8 @@ from collections import namedtuple
 import pygame
 from pygame.math import Vector2
 
-from text.text import show_score
-from models import Item, Player, Enemy
-from constants import FACING_EAST, FACING_WEST
+from models import Item, Player, Enemy, Score
+from constants import FACING_WEST
 
 Size = namedtuple('Size', ['width', 'height'])
 
@@ -20,6 +19,7 @@ def create_background(screen: pygame.Surface, image: pygame.Surface) -> pygame.S
 def main():
     pygame.init()
     pygame.mixer.init()
+    pygame.font.init()
     main_clock = pygame.time.Clock()
     run = True
     display_size = Size(width=800, height=600)
@@ -31,7 +31,7 @@ def main():
     background_sound = pygame.mixer.Sound("assets/sounds/background/Guitar-Mayhem-2.mp3")
     background_sound.set_volume(0.07)
     background_sound.play(loops=-1)
-    score = 0
+    score = Score(screen)
 
     # Player
     player = Player(screen, sprites_image, initial_position=(50, 50))
@@ -49,7 +49,7 @@ def main():
     player_sprites = pygame.sprite.RenderUpdates(player)
     item_sprites = pygame.sprite.RenderUpdates(mana)
     mobs_sprites = pygame.sprite.RenderUpdates(enemy)
-    all_sprites = pygame.sprite.RenderUpdates(player, enemy, mana)
+    all_sprites = pygame.sprite.OrderedUpdates(score, mana, enemy, player)
 
     background = create_background(screen, sprites_image)
     screen.blit(background, (0, 0, display_size.width, display_size.height))
@@ -64,16 +64,7 @@ def main():
             elif event.type == pygame.KEYUP:
                 player.on_key_released(event.key)
 
-        # TODO: remove this line (**)
-        screen.blit(background, (0, 0, display_size.width, display_size.height))
-
-        # TODO: convert Score into a Sprite
-        score_dirty = show_score(f'Score: {score}', screen)
-
-        # TODO: (**) in favor of clearing sprites
         all_sprites.clear(screen, background)
-
-        all_sprites.update(player_position=player.center_position)
 
         # COLISSIONS ++++++++
         if player.alive() and pygame.sprite.spritecollide(player, mobs_sprites, dokill=False):
@@ -83,19 +74,16 @@ def main():
         if pygame.sprite.spritecollide(player, item_sprites,
                                        dokill=False,
                                        collided=pygame.sprite.collide_rect_ratio(0.7)):
-            score += 1
+            score.value += 1
             bottle_picked.play()
             mana.spawn()
         # +++++++++++++++++++
 
-        sprites_dirty = item_sprites.draw(screen)
-        sprites_dirty += mobs_sprites.draw(screen)
-        sprites_dirty += player_sprites.draw(screen)
+        all_sprites.update(player_position=player.center_position)
 
-        dirty_rects = [score_dirty] + sprites_dirty
+        sprites_dirty = all_sprites.draw(screen)
 
-        pygame.display.update(dirty_rects)
-        # pygame.display.flip()
+        pygame.display.update(sprites_dirty)
         main_clock.tick(60)
 
 
