@@ -1,4 +1,6 @@
+import random
 from collections import namedtuple
+from pathlib import Path
 
 import pygame
 from pygame.math import Vector2
@@ -16,6 +18,11 @@ def create_background(screen: pygame.Surface, image: pygame.Surface) -> pygame.S
     )
 
 
+def select_background_sound():
+    sounds = Path('assets/sounds/background')
+    return random.choice(list(sounds.iterdir()))
+
+
 def main():
     pygame.init()
     pygame.mixer.init()
@@ -23,13 +30,15 @@ def main():
     main_clock = pygame.time.Clock()
     run = True
     display_size = Size(width=800, height=600)
-    screen = pygame.display.set_mode(display_size, pygame.FULLSCREEN, vsync=1)
+    screen = pygame.display.set_mode(display_size, pygame.RESIZABLE, vsync=1)
     sprites_image = pygame.image.load("assets/sprites/sprites.png").convert()
     # SOUND
     bottle_picked = pygame.mixer.Sound("assets/sounds/bottle_picked.ogg")
     player_killed_sound = pygame.mixer.Sound("assets/sounds/kill.ogg")
-    background_sound = pygame.mixer.Sound("assets/sounds/background/Guitar-Mayhem-2.mp3")
+    background_sound = pygame.mixer.Sound(select_background_sound())
+    ending_sound = pygame.mixer.Sound("assets/sounds/ending.mp3")
     background_sound.set_volume(0.07)
+    ending_sound.set_volume(0.07)
     background_sound.play(loops=-1)
     score = Score(screen)
 
@@ -60,9 +69,17 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
             elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    player_sprites.add(player)
+                    all_sprites.add(player)
+                    score.value = 0
+                    player.restore_initial_position()
+                    enemy.restore_initial_position()
+                    ending_sound.stop()
+                    background_sound.stop()
+                    background_sound.play()
+
                 player.on_key_pressed(event.key)
-            elif event.type == pygame.KEYUP:
-                player.on_key_released(event.key)
 
         all_sprites.clear(screen, background)
 
@@ -70,6 +87,10 @@ def main():
         if player.alive() and pygame.sprite.spritecollide(player, mobs_sprites, dokill=False):
             player.kill()
             player_killed_sound.play()
+            background_sound.stop()
+            ending_sound.play(loops=-1)
+            enemy.velocity.update(0,0)
+            enemy.acceleration.update(0.01, 0.01)
 
         if pygame.sprite.spritecollide(player, item_sprites,
                                        dokill=False,

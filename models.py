@@ -15,7 +15,7 @@ class Item(Sprite):
         self.original_image = image
         skin_rect = pygame.rect.Rect(GREEN_LIQUID_ITEM)
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 5 for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * 4 for side in skin_rect.size])
 
         self.rect = self.image.get_rect()
         self.rect.center = initial_position
@@ -40,6 +40,7 @@ class Walker(Sprite):
         self.last_skin_change = time.time()
         self.facing = facing
 
+        self.initial_position = initial_position
         self.rect = self.image.get_rect()
         self.rect.center = initial_position
 
@@ -49,6 +50,12 @@ class Walker(Sprite):
 
         # Sound
         self.knock = pygame.mixer.Sound("assets/sounds/boundary_hit.ogg")
+
+    def restore_initial_position(self):
+        self.velocity.update(0, 0)
+        self.acceleration.update(0, 0)
+        self.center_position.update(self.initial_position)
+        self.rect.center = self.center_position
 
     def set_skin(self):
         pass
@@ -106,14 +113,14 @@ class Enemy(Walker):
         self.facing = FACING_WEST
         skin_rect = pygame.rect.Rect(MOBS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 5 for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * 4 for side in skin_rect.size])
 
 
 class Player(Walker):
     def set_skin(self):
         skin_rect = pygame.rect.Rect(CHARACTERS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 5 for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * 4 for side in skin_rect.size])
 
     def next_skin(self):
         if time.time() - self.last_skin_change > 1:
@@ -129,10 +136,6 @@ class Player(Walker):
         elif key == pygame.K_LEFT and not self.facing == FACING_WEST:
             self.facing = FACING_WEST
             self.image = pygame.transform.flip(self.image, True, False)
-
-    def on_key_released(self, key):
-        if key in [pygame.K_RIGHT, pygame.K_LEFT, pygame.K_UP, pygame.K_DOWN]:
-            self.acceleration = Vector2(0, 0)
 
     def on_key_pressed(self, key):
         magnitude = .5
