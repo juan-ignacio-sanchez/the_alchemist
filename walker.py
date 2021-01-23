@@ -30,15 +30,15 @@ def main():
     main_clock = pygame.time.Clock()
     run = True
     display_size = Size(width=800, height=600)
-    screen = pygame.display.set_mode(display_size, pygame.RESIZABLE, vsync=1)
+    screen = pygame.display.set_mode(display_size, pygame.FULLSCREEN, vsync=1)
     sprites_image = pygame.image.load("assets/sprites/sprites.png").convert()
     # SOUND
     bottle_picked = pygame.mixer.Sound("assets/sounds/bottle_picked.ogg")
     player_killed_sound = pygame.mixer.Sound("assets/sounds/kill.ogg")
     background_sound = pygame.mixer.Sound(select_background_sound())
     ending_sound = pygame.mixer.Sound("assets/sounds/ending.mp3")
-    background_sound.set_volume(0.07)
-    ending_sound.set_volume(0.07)
+    background_sound.set_volume(0.09)
+    ending_sound.set_volume(0.09)
     background_sound.play(loops=-1)
     score = Score(screen)
 
@@ -66,7 +66,7 @@ def main():
     pygame.key.set_repeat(1, 35)
     while run:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
                 run = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
@@ -77,6 +77,8 @@ def main():
                     enemy.restore_initial_position()
                     ending_sound.stop()
                     background_sound.stop()
+                    background_sound = pygame.mixer.Sound(select_background_sound())
+                    background_sound.set_volume(0.09)
                     background_sound.play()
 
                 player.on_key_pressed(event.key)
