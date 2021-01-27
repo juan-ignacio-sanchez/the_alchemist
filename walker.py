@@ -1,113 +1,49 @@
 import random
 from collections import namedtuple
 from pathlib import Path
+from pygame.examples import aliens
+
+from scenes import Game
+from transformations import blur, greyscale
 
 import pygame
-from pygame.math import Vector2
-
-from models import Item, Player, Enemy, Score
-from constants import FACING_WEST
 
 Size = namedtuple('Size', ['width', 'height'])
-
-
-def create_background(screen: pygame.Surface, image: pygame.Surface) -> pygame.Surface:
-    return pygame.transform.scale(
-        image.subsurface(pygame.rect.Rect(0, 91, 64, 48)),
-        (screen.get_rect().width, screen.get_rect().height)
-    )
-
-
-def select_background_sound():
-    sounds = Path('assets/sounds/background')
-    return random.choice(list(sounds.iterdir()))
 
 
 def main():
     pygame.init()
     pygame.mixer.init()
     pygame.font.init()
+    pygame.key.set_repeat(1, 32)
     main_clock = pygame.time.Clock()
-    run = True
     display_size = Size(width=800, height=600)
-    screen = pygame.display.set_mode(display_size, pygame.FULLSCREEN, vsync=1)
-    sprites_image = pygame.image.load("assets/sprites/sprites.png").convert()
-    # SOUND
-    bottle_picked = pygame.mixer.Sound("assets/sounds/bottle_picked.ogg")
-    player_killed_sound = pygame.mixer.Sound("assets/sounds/kill.ogg")
-    background_sound = pygame.mixer.Sound(select_background_sound())
-    ending_sound = pygame.mixer.Sound("assets/sounds/ending.mp3")
-    background_sound.set_volume(0.09)
-    ending_sound.set_volume(0.09)
-    background_sound.play(loops=-1)
-    score = Score(screen)
+    screen = pygame.display.set_mode(display_size, pygame.RESIZABLE, vsync=1)
 
-    # Player
-    player = Player(screen, sprites_image, initial_position=(50, 50))
-    player.velocity = Vector2(0, 0)
+    # Scenes (Main Menu, Credits, Game itself...)
+    game = Game(screen, display_size, main_clock)
 
-    # Enemy
-    enemy = Enemy(screen, sprites_image,
-                  skin='BLOOD_CRYING_MOB', facing=FACING_WEST,
-                  initial_position=(screen.get_width(), 0))
-    enemy.velocity = Vector2(-.5, .5)
+    # menu_background = blur(game.background.copy(), level=10)
+    menu_background = greyscale(game.background.copy())
+    main_menu_sound = pygame.mixer.Sound("assets/sounds/main_menu.mp3")
+    main_menu_sound.set_volume(0.09)
+    main_menu_sound.play(loops=-1)
 
-    # Items
-    mana = Item(screen, sprites_image)
-
-    player_sprites = pygame.sprite.RenderUpdates(player)
-    item_sprites = pygame.sprite.RenderUpdates(mana)
-    mobs_sprites = pygame.sprite.RenderUpdates(enemy)
-    all_sprites = pygame.sprite.OrderedUpdates(score, mana, enemy, player)
-
-    background = create_background(screen, sprites_image)
-    screen.blit(background, (0, 0, display_size.width, display_size.height))
-    pygame.display.flip()
-    pygame.key.set_repeat(1, 35)
+    run = True
+    close = False
     while run:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
+            if event.type == pygame.QUIT or close:
                 run = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:
-                    player_sprites.add(player)
-                    all_sprites.add(player)
-                    score.value = 0
-                    player.restore_initial_position()
-                    enemy.restore_initial_position()
-                    ending_sound.stop()
-                    background_sound.stop()
-                    background_sound = pygame.mixer.Sound(select_background_sound())
-                    background_sound.set_volume(0.09)
-                    background_sound.play()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    run = False
+                elif event.key == pygame.K_RETURN:
+                    close = game.play()
+        screen.blit(menu_background, (0, 0, *screen.get_size()))
+        pygame.display.flip()
 
-                player.on_key_pressed(event.key)
-
-        all_sprites.clear(screen, background)
-
-        # COLISSIONS ++++++++
-        if player.alive() and pygame.sprite.spritecollide(player, mobs_sprites, dokill=False):
-            player.kill()
-            player_killed_sound.play()
-            background_sound.stop()
-            ending_sound.play(loops=-1)
-            enemy.velocity.update(0,0)
-            enemy.acceleration.update(0.01, 0.01)
-
-        if pygame.sprite.spritecollide(player, item_sprites,
-                                       dokill=False,
-                                       collided=pygame.sprite.collide_rect_ratio(0.7)):
-            score.value += 1
-            bottle_picked.play()
-            mana.spawn()
-        # +++++++++++++++++++
-
-        all_sprites.update(player_position=player.center_position)
-
-        sprites_dirty = all_sprites.draw(screen)
-
-        pygame.display.update(sprites_dirty)
-        main_clock.tick(60)
+    pygame.quit()
 
 
 if __name__ == '__main__':

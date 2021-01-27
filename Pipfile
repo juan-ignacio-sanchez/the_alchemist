@@ -8,6 +8,7 @@ verify_ssl = true
 [packages]
 pygame = "*"
 pyinstaller = "*"
+numpy = "*"
 
 [requires]
 python_version = "3.9"

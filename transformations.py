@@ -1,0 +1,18 @@
+import pygame
+import numpy as np
+
+
+def blur1(surface: pygame.Surface, level: int) -> pygame.Surface:
+    size = surface.get_size()
+    scale_size = pygame.math.Vector2(size) / level
+    surface = pygame.transform.smoothscale(surface, (int(scale_size.x), int(scale_size.y)))
+    surface = pygame.transform.smoothscale(surface, size)
+    return surface
+
+
+def greyscale(surface: pygame.Surface):
+    arr = pygame.surfarray.pixels3d(surface)
+    mean_arr = np.dot(arr, [0.216, 0.587, 0.144])
+    mean_arr3d = mean_arr[..., np.newaxis]
+    new_arr = np.repeat(mean_arr3d[:, :, :], 3, axis=2)
+    return pygame.surfarray.make_surface(new_arr)
