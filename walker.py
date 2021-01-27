@@ -23,8 +23,7 @@ def main():
     # Scenes (Main Menu, Credits, Game itself...)
     game = Game(screen, display_size, main_clock)
 
-    # menu_background = blur(game.background.copy(), level=10)
-    menu_background = greyscale(game.background.copy())
+    menu_background = blur(game.background.copy(), level=10)
     main_menu_sound = pygame.mixer.Sound("assets/sounds/main_menu.mp3")
     main_menu_sound.set_volume(0.09)
     main_menu_sound.play(loops=-1)
@@ -39,7 +38,10 @@ def main():
                 if event.key == pygame.K_q:
                     run = False
                 elif event.key == pygame.K_RETURN:
+                    main_menu_sound.stop()
                     close = game.play()
+                    main_menu_sound.set_volume(0.09)
+                    main_menu_sound.play(loops=-1)
         screen.blit(menu_background, (0, 0, *screen.get_size()))
         pygame.display.flip()
 

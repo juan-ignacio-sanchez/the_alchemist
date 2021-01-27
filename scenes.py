@@ -82,7 +82,7 @@ class Game(Scene):
         self.score.value = 0
         self.player.restore_initial_position()
         self.enemy.restore_initial_position()
-        # self.background_sound.play()
+        self.background_sound.play()
         self.player_sprites = pygame.sprite.RenderUpdates(self.player)
         self.item_sprites = pygame.sprite.RenderUpdates(self.mana)
         self.mobs_sprites = pygame.sprite.RenderUpdates(self.enemy)
