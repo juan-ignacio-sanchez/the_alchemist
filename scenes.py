@@ -67,7 +67,7 @@ class Game(Scene):
             self.paused = not self.paused
             self.last_paused = time()
             if self.paused:
-                self.blurred_surface = blur(greyscale(pygame.display.get_surface()), level=3)
+                self.blurred_surface = greyscale(pygame.display.get_surface())
             else:
                 self._draw_background()
                 pygame.display.flip()

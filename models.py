@@ -1,7 +1,9 @@
+import os
 import time
 import random
 
 import pygame
+import pygame.freetype
 from pygame.sprite import Sprite
 from pygame.math import Vector2
 
@@ -163,9 +165,52 @@ class Score(Sprite):
         self.surface = surface
         # upper left corner with a font size of 64
         # the number 200 for the width is arbitrary
-        self.rect = pygame.rect.Rect(0, 0, 200, 64)
-        self.fnt = pygame.font.SysFont("Arial", 32)  # FIXME: adjust size
+        self.fnt = pygame.freetype.Font("./assets/fonts/quicksand.ttf", 32)  # FIXME: adjust size
         self.value = 0
 
     def update(self, *args, **kwargs) -> None:
-        self.image = self.fnt.render(f"Score: {self.value}", False, pygame.color.Color("white"))
+        self.image, self.rect = self.fnt.render(f"Score: {self.value}", pygame.color.Color("white"))
+        self.rect.center = [(self.rect.width / 2) + 5, (self.rect.height / 2) + 5]
+
+
+class Option(Sprite):
+    def __init__(self, surface: pygame.Surface, text: str):
+        super().__init__()
+        self.text = text
+        self.surface = surface
+        self.fnt = pygame.freetype.Font("./assets/fonts/quicksand_bold.ttf", 32)
+
+    def render(self, *args, **kwargs):
+        self.image, self.rect = self.fnt.render(text=self.text, fgcolor=pygame.color.Color("white"))
+        self.rect.center = self.surface.get_rect().center
+        return self.image, self.rect
+
+    def select(self):
+        self.fnt.underline = True
+
+    def unselect(self):
+        self.fnt.underline = False
+
+
+class MainMenu(Sprite):
+    START = 0
+    QUIT = 1
+
+    def __init__(self, surface: pygame.Surface):
+        super().__init__()
+        self.surface = surface
+        self.selected_option = MainMenu.START
+        self.start_option = Option(surface, text="Start")
+        self.quit_option = Option(surface, text="Quit")
+        self.options = {
+            MainMenu.START: self.start_option,
+            MainMenu.QUIT: self.quit_option,
+        }
+        self.render_options = pygame.sprite.RenderUpdates(self.start_option, self.quit_option)
+
+    def update(self):
+        self.image, self.rect = self.options[self.selected_option].render()
+
+    def next_option(self):
+        self.selected_option = (self.selected_option + 1) % len(self.options)
+        print(self.selected_option)
