@@ -23,7 +23,7 @@ class Game(Scene):
         # Pause settings
         self.paused = False
         self.last_paused = time()
-        self.blurred_surface = None
+        self.paused_surface = None
         # Images
         self.sprites_image = pygame.image.load("assets/sprites/sprites.png").convert()
         self.background = self._create_background()
@@ -68,7 +68,7 @@ class Game(Scene):
             self.paused = not self.paused
             self.last_paused = time()
             if self.paused:
-                self.blurred_surface = greyscale(pygame.display.get_surface())
+                self.paused_surface = greyscale(pygame.display.get_surface())
             else:
                 self._draw_background()
                 pygame.display.flip()
@@ -141,6 +141,6 @@ class Game(Scene):
 
                 pygame.display.update(sprites_dirty)
             else:
-                self.screen.blit(self.blurred_surface, (0, 0, *self.display_size))
+                self.screen.blit(self.paused_surface, (0, 0, *self.display_size))
                 pygame.display.update()
             self.main_clock.tick(60)
