@@ -178,12 +178,13 @@ class Option(Sprite):
         super().__init__()
         self.text = text
         self.surface = surface
-        self.fnt = pygame.freetype.Font("./assets/fonts/quicksand_bold.ttf", 32)
+        self.fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 62)
+        self.fnt.underline_adjustment = 1
+        self.fnt.pad = True
 
     def render(self, *args, **kwargs):
-        self.image, self.rect = self.fnt.render(text=self.text, fgcolor=pygame.color.Color("white"))
-        self.rect.center = self.surface.get_rect().center
-        return self.image, self.rect
+        self.image, _ = self.fnt.render(text=self.text, fgcolor=pygame.color.Color("white"))
+        self.rect = self.image.get_rect()
 
     def select(self):
         self.fnt.underline = True
@@ -202,15 +203,32 @@ class MainMenu(Sprite):
         self.selected_option = MainMenu.START
         self.start_option = Option(surface, text="Start")
         self.quit_option = Option(surface, text="Quit")
-        self.options = {
-            MainMenu.START: self.start_option,
-            MainMenu.QUIT: self.quit_option,
-        }
-        self.render_options = pygame.sprite.RenderUpdates(self.start_option, self.quit_option)
+        self.options = [
+            self.start_option,
+            self.quit_option,
+        ]
+        self.image = pygame.Surface((0, 32 * len(self.options)))
+        self.render()
 
-    def update(self):
-        self.image, self.rect = self.options[self.selected_option].render()
+    def render(self):
+        # Underlining selected option
+        for opt in self.options:
+            opt.fnt.underline = False
+        self.options[self.selected_option].fnt.underline = True
+
+        # Adjusting next rect position
+        last_y_position = 0
+        for opt in self.options:
+            opt.render()  # calculates how to render the text
+            opt.rect.y += last_y_position
+            last_y_position += opt.rect.height
+
+        # Blitting into self.image
+        self.rect = self.image.get_rect().unionall([opt.rect for opt in self.options])
+        self.rect.center = self.surface.get_rect().center
+        self.image = pygame.surface.Surface(self.rect.size, flags=pygame.SRCALPHA)
+        self.image.blits([(opt.image, opt.rect) for opt in self.options])
 
     def next_option(self):
         self.selected_option = (self.selected_option + 1) % len(self.options)
-        print(self.selected_option)
+        self.render()

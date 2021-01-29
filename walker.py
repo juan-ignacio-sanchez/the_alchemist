@@ -15,8 +15,8 @@ def main():
     pygame.mixer.init()
     pygame.freetype.init()
     main_clock = pygame.time.Clock()
-    display_size = Size(width=800, height=600)
-    screen = pygame.display.set_mode(display_size, pygame.RESIZABLE, vsync=1)
+    display_size = Size(width=1280, height=800)
+    screen = pygame.display.set_mode(display_size, pygame.FULLSCREEN, vsync=1)
     # Scenes (Main Menu, Credits, Game itself...)
     game = Game(screen, display_size, main_clock)
 
