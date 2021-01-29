@@ -1,6 +1,7 @@
 import os
 import time
 import random
+from enum import IntEnum
 
 import pygame
 import pygame.freetype
@@ -194,17 +195,22 @@ class Option(Sprite):
 
 
 class MainMenu(Sprite):
-    START = 0
-    QUIT = 1
+    options = IntEnum('options', (
+        'START',
+        'CREDITS',
+        'QUIT',
+    ), start=0)
 
     def __init__(self, surface: pygame.Surface):
         super().__init__()
         self.surface = surface
-        self.selected_option = MainMenu.START
+        self.selected_option = MainMenu.options.START
         self.start_option = Option(surface, text="NEW GAME")
+        self.credits_option = Option(surface, text="CREDITS")
         self.quit_option = Option(surface, text="QUIT")
         self.options = [
             self.start_option,
+            self.credits_option,
             self.quit_option,
         ]
         self.image = pygame.Surface((0, 32 * len(self.options)))
@@ -228,6 +234,11 @@ class MainMenu(Sprite):
         self.rect.center = self.surface.get_rect().center
         self.image = pygame.surface.Surface(self.rect.size, flags=pygame.SRCALPHA)
         self.image.blits([(opt.image, opt.rect) for opt in self.options])
+
+    def prev_option(self) -> int:
+        self.selected_option = (self.selected_option - 1) % len(self.options)
+        self.render()
+        return self.selected_option
 
     def next_option(self) -> int:
         self.selected_option = (self.selected_option + 1) % len(self.options)

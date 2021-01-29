@@ -17,7 +17,7 @@ def main():
     pygame.freetype.init()
     main_clock = pygame.time.Clock()
     display_size = Size(width=1280, height=800)
-    screen = pygame.display.set_mode(display_size, pygame.FULLSCREEN, vsync=1)
+    screen = pygame.display.set_mode(display_size, settings.DISPLAY_MODE, vsync=1)
     # Scenes (Main Menu, Credits, Game itself...)
     game = Game(screen, display_size, main_clock)
 
@@ -42,7 +42,7 @@ def main():
                 if event.key == pygame.K_q:
                     run = False
                 elif event.key == pygame.K_RETURN:
-                    if selected_option == MainMenu.START:
+                    if selected_option == MainMenu.options.START:
                         pygame.key.set_repeat(1, 32)
                         main_menu_sound.stop()
                         force_quit = game.play()
@@ -52,9 +52,11 @@ def main():
                         main_menu_sound.set_volume(settings.VOLUME)
                         main_menu_sound.play(loops=-1)
                         pygame.key.set_repeat()
-                    elif selected_option == MainMenu.QUIT:
+                    elif selected_option == MainMenu.options.QUIT:
                         run = False
-                elif event.key == pygame.K_x:
+                elif event.key == pygame.K_UP:
+                    selected_option = main_menu.prev_option()
+                elif event.key == pygame.K_DOWN:
                     selected_option = main_menu.next_option()
 
         main_menu_sprites.clear(screen, menu_background)
