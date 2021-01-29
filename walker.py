@@ -1,11 +1,11 @@
-import os
 from collections import namedtuple
-
-from scenes import Game
-from models import MainMenu
 
 import pygame
 import pygame.freetype
+
+import settings
+from scenes import Game
+from models import MainMenu
 
 Size = namedtuple('Size', ['width', 'height'])
 
@@ -22,7 +22,7 @@ def main():
 
     menu_background = game.background
     main_menu_sound = pygame.mixer.Sound("assets/sounds/main_menu.mp3")
-    main_menu_sound.set_volume(0.09)
+    main_menu_sound.set_volume(settings.VOLUME)
     main_menu_sound.play(loops=-1)
 
     main_menu = MainMenu(screen)
@@ -43,7 +43,7 @@ def main():
                     pygame.key.set_repeat(1, 32)
                     main_menu_sound.stop()
                     close = game.play()
-                    main_menu_sound.set_volume(0.09)
+                    main_menu_sound.set_volume(settings.VOLUME)
                     main_menu_sound.play(loops=-1)
                 elif event.key == pygame.K_x:
                     main_menu.next_option()

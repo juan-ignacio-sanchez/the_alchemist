@@ -8,6 +8,7 @@ from pygame.math import Vector2
 from models import Item, Player, Enemy, Score
 from constants import FACING_WEST
 from transformations import blur, greyscale
+import settings
 
 
 class Scene:
@@ -30,9 +31,9 @@ class Game(Scene):
         self.bottle_picked = pygame.mixer.Sound("assets/sounds/bottle_picked.ogg")
         self.player_killed_sound = pygame.mixer.Sound("assets/sounds/kill.ogg")
         self.background_sound = pygame.mixer.Sound(self._select_background_sound())
-        self.background_sound.set_volume(0.09)
+        self.background_sound.set_volume(settings.VOLUME)
         self.ending_sound = pygame.mixer.Sound("assets/sounds/ending.mp3")
-        self.ending_sound.set_volume(0.09)
+        self.ending_sound.set_volume(settings.VOLUME)
 
         # Sprites
         self.score = Score(self.screen)
