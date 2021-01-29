@@ -165,7 +165,7 @@ class Score(Sprite):
         self.surface = surface
         # upper left corner with a font size of 64
         # the number 200 for the width is arbitrary
-        self.fnt = pygame.freetype.Font("./assets/fonts/quicksand.ttf", 32)  # FIXME: adjust size
+        self.fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 32)  # FIXME: adjust size
         self.value = 0
 
     def update(self, *args, **kwargs) -> None:
@@ -201,8 +201,8 @@ class MainMenu(Sprite):
         super().__init__()
         self.surface = surface
         self.selected_option = MainMenu.START
-        self.start_option = Option(surface, text="Start")
-        self.quit_option = Option(surface, text="Quit")
+        self.start_option = Option(surface, text="NEW GAME")
+        self.quit_option = Option(surface, text="QUIT")
         self.options = [
             self.start_option,
             self.quit_option,
@@ -229,6 +229,7 @@ class MainMenu(Sprite):
         self.image = pygame.surface.Surface(self.rect.size, flags=pygame.SRCALPHA)
         self.image.blits([(opt.image, opt.rect) for opt in self.options])
 
-    def next_option(self):
+    def next_option(self) -> int:
         self.selected_option = (self.selected_option + 1) % len(self.options)
         self.render()
+        return self.selected_option

@@ -6,6 +6,7 @@ import pygame.freetype
 import settings
 from scenes import Game
 from models import MainMenu
+from transformations import greyscale
 
 Size = namedtuple('Size', ['width', 'height'])
 
@@ -20,7 +21,7 @@ def main():
     # Scenes (Main Menu, Credits, Game itself...)
     game = Game(screen, display_size, main_clock)
 
-    menu_background = game.background
+    menu_background = greyscale(game.background)
     main_menu_sound = pygame.mixer.Sound("assets/sounds/main_menu.mp3")
     main_menu_sound.set_volume(settings.VOLUME)
     main_menu_sound.play(loops=-1)
@@ -31,22 +32,30 @@ def main():
     pygame.display.flip()
 
     run = True
-    close = False
+    force_quit = False
+    selected_option = main_menu.selected_option
     while run:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or close:
+            if event.type == pygame.QUIT or force_quit:
                 run = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
                     run = False
                 elif event.key == pygame.K_RETURN:
-                    pygame.key.set_repeat(1, 32)
-                    main_menu_sound.stop()
-                    close = game.play()
-                    main_menu_sound.set_volume(settings.VOLUME)
-                    main_menu_sound.play(loops=-1)
+                    if selected_option == MainMenu.START:
+                        pygame.key.set_repeat(1, 32)
+                        main_menu_sound.stop()
+                        force_quit = game.play()
+                        ### Restore main menu ###
+                        screen.blit(menu_background, (0, 0, *screen.get_size()))
+                        pygame.display.flip()
+                        main_menu_sound.set_volume(settings.VOLUME)
+                        main_menu_sound.play(loops=-1)
+                        pygame.key.set_repeat()
+                    elif selected_option == MainMenu.QUIT:
+                        run = False
                 elif event.key == pygame.K_x:
-                    main_menu.next_option()
+                    selected_option = main_menu.next_option()
 
         main_menu_sprites.clear(screen, menu_background)
         main_menu_sprites.update()
