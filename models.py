@@ -116,14 +116,14 @@ class Enemy(Walker):
         self.facing = FACING_WEST
         skin_rect = pygame.rect.Rect(MOBS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 4 for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * 5 for side in skin_rect.size])
 
 
 class Player(Walker):
     def set_skin(self):
         skin_rect = pygame.rect.Rect(CHARACTERS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 4 for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * 5 for side in skin_rect.size])
 
     def next_skin(self):
         if time.time() - self.last_skin_change > 1:
@@ -205,13 +205,10 @@ class MainMenu(Sprite):
         super().__init__()
         self.surface = surface
         self.selected_option = MainMenu.options.START
-        self.start_option = Option(surface, text="NEW GAME")
-        self.credits_option = Option(surface, text="CREDITS")
-        self.quit_option = Option(surface, text="QUIT")
         self.options = [
-            self.start_option,
-            self.credits_option,
-            self.quit_option,
+            Option(surface, text="NEW GAME"),
+            Option(surface, text="CREDITS"),
+            Option(surface, text="QUIT"),
         ]
         self.image = pygame.Surface((0, 32 * len(self.options)))
         self.render()

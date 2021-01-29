@@ -69,9 +69,11 @@ class Game(Scene):
             self.last_paused = time()
             if self.paused:
                 self.paused_surface = greyscale(pygame.display.get_surface())
+                pygame.mixer.pause()
             else:
                 self._draw_background()
                 pygame.display.flip()
+                pygame.mixer.unpause()
 
     def _restart(self):
         self._stop()

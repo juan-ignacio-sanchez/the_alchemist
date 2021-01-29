@@ -64,6 +64,7 @@ def main():
         sprites_dirty = main_menu_sprites.draw(screen)
 
         pygame.display.update(sprites_dirty)
+        main_clock.tick(15)
 
     pygame.quit()
 
