@@ -4,7 +4,7 @@ import pygame
 import pygame.freetype
 
 import settings
-from scenes import Game
+from scenes import Game, CreditsScene, ControlsScene
 from models import MainMenu
 from transformations import greyscale
 
@@ -28,6 +28,10 @@ def main():
 
     main_menu = MainMenu(screen)
     main_menu_sprites = pygame.sprite.RenderUpdates(main_menu)
+
+    credits_scene = CreditsScene(screen, display_size, main_clock, menu_background)
+    controls_scene = ControlsScene(screen, display_size, main_clock, menu_background)
+
     screen.blit(menu_background, (0, 0, *screen.get_size()))
     pygame.display.flip()
 
@@ -52,6 +56,14 @@ def main():
                         main_menu_sound.set_volume(settings.VOLUME)
                         main_menu_sound.play(loops=-1)
                         pygame.key.set_repeat()
+                    elif selected_option == MainMenu.options.CREDITS:
+                        force_quit = credits_scene.play()
+                        screen.blit(menu_background, (0, 0, *screen.get_size()))
+                        pygame.display.flip()
+                    elif selected_option == MainMenu.options.CONTROLS:
+                        force_quit = controls_scene.play()
+                        screen.blit(menu_background, (0, 0, *screen.get_size()))
+                        pygame.display.flip()
                     elif selected_option == MainMenu.options.QUIT:
                         run = False
                 elif event.key == pygame.K_UP:

@@ -9,7 +9,7 @@ from pygame.sprite import Sprite
 from pygame.math import Vector2
 
 import settings
-from constants import FACING_WEST, FACING_EAST, CHARACTERS, CHARACTERS_DICT, MOBS_DICT, GREEN_LIQUID_ITEM
+from constants import FACING_WEST, FACING_EAST, CHARACTERS, CHARACTERS_DICT, MOBS_DICT, WIDE_GREEN_LIQUID_ITEM
 
 
 class Item(Sprite):
@@ -17,7 +17,7 @@ class Item(Sprite):
         super().__init__()
         self.surface = surface
         self.original_image = image
-        skin_rect = pygame.rect.Rect(GREEN_LIQUID_ITEM)
+        skin_rect = pygame.rect.Rect(WIDE_GREEN_LIQUID_ITEM)
         self.image = self.original_image.subsurface(skin_rect)
         self.image = pygame.transform.scale(self.image, [side * 4 for side in skin_rect.size])
 
@@ -176,17 +176,19 @@ class Score(Sprite):
 
 
 class Option(Sprite):
-    def __init__(self, surface: pygame.Surface, text: str):
+    def __init__(self, surface: pygame.Surface, text: str, size: int = 62, interlined=0):
         super().__init__()
         self.text = text
         self.surface = surface
-        self.fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 62)
+        self.fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", size)
         self.fnt.underline_adjustment = 1
         self.fnt.pad = True
+        self.interlined = interlined
 
     def render(self, *args, **kwargs):
         self.image, _ = self.fnt.render(text=self.text, fgcolor=pygame.color.Color("white"))
         self.rect = self.image.get_rect()
+        self.rect.height += self.interlined
 
     def select(self):
         self.fnt.underline = True
@@ -198,6 +200,7 @@ class Option(Sprite):
 class MainMenu(Sprite):
     options = IntEnum('options', (
         'START',
+        'CONTROLS',
         'CREDITS',
         'QUIT',
     ), start=0)
@@ -205,11 +208,13 @@ class MainMenu(Sprite):
     def __init__(self, surface: pygame.Surface):
         super().__init__()
         self.surface = surface
+        self.title = Option(surface, text="~ The Alchemist ~", size=70, interlined=70)
         self.option_change_sound = pygame.mixer.Sound('./assets/sounds/menu_item_changed.ogg')
         self.option_change_sound.set_volume(settings.VOLUME)
         self.selected_option = MainMenu.options.START
         self.options = [
             Option(surface, text="NEW GAME"),
+            Option(surface, text="CONTROLS"),
             Option(surface, text="CREDITS"),
             Option(surface, text="QUIT"),
         ]
@@ -222,18 +227,19 @@ class MainMenu(Sprite):
             opt.fnt.underline = False
         self.options[self.selected_option].fnt.underline = True
 
+        all_texts = [self.title] + self.options
         # Adjusting next rect position
-        last_y_position = 0
-        for opt in self.options:
+        last_y_position = 50
+        for opt in all_texts:
             opt.render()  # calculates how to render the text
             opt.rect.y += last_y_position
+            opt.rect.centerx = self.surface.get_width() / 2
             last_y_position += opt.rect.height
 
         # Blitting into self.image
-        self.rect = self.image.get_rect().unionall([opt.rect for opt in self.options])
-        self.rect.center = self.surface.get_rect().center
+        self.rect = self.image.get_rect().unionall([opt.rect for opt in all_texts])
         self.image = pygame.surface.Surface(self.rect.size, flags=pygame.SRCALPHA)
-        self.image.blits([(opt.image, opt.rect) for opt in self.options])
+        self.image.blits([(opt.image, opt.rect) for opt in all_texts])
 
     def prev_option(self) -> int:
         self.selected_option = (self.selected_option - 1) % len(self.options)

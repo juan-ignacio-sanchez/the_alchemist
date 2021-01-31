@@ -3,6 +3,7 @@ from time import time
 from pathlib import Path
 
 import pygame
+import pygame.freetype
 from pygame.math import Vector2
 
 from models import Item, Player, Enemy, Score
@@ -12,7 +13,8 @@ import settings
 
 
 class Scene:
-    pass
+    def play(self):
+        pass
 
 
 class Game(Scene):
@@ -147,3 +149,57 @@ class Game(Scene):
                 self.screen.blit(self.paused_surface, (0, 0, *self.display_size))
                 pygame.display.update()
             self.main_clock.tick(60)
+
+
+class TextScene(Scene):
+    def __init__(self, screen, display_size, main_clock, background, path):
+        self.screen = screen
+        self.display_size = display_size
+        self.main_clock = main_clock
+        self.fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 20)
+        self.fnt.pad = True
+        self.credits_text = Path(path)
+        self.background = background
+
+    def align(self, line_rect, last_y):
+        line_rect.y += last_y
+        line_rect.centerx = self.screen.get_width() / 2
+        return line_rect
+
+    def play(self):
+        self.screen.blit(self.background, (0, 0, *self.display_size))
+        last_y = 50
+        with self.credits_text.open(mode="r") as credits_file:
+            lines = credits_file.readlines()
+            for line in lines:
+                line = line.strip("\n")
+                line_surface, _ = self.fnt.render(line, fgcolor=pygame.color.Color('white'))
+                line_rect = self.align(line_surface.get_rect(), last_y)
+                last_y += line_rect.height
+                self.screen.blit(line_surface, line_rect)
+        pygame.display.flip()
+
+        run = True
+        while run:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return True
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        run = False
+            self.main_clock.tick(10)
+
+
+class CreditsScene(TextScene):
+    def __init__(self, *args, **kwargs):
+        super().__init__(path="./assets/text/credits.txt", *args, **kwargs)
+
+
+class ControlsScene(TextScene):
+    def __init__(self, *args, **kwargs):
+        super().__init__(path="./assets/text/controls.txt", *args, **kwargs)
+
+    def align(self, line_rect, last_y):
+        line_rect.y += last_y
+        line_rect.x = self.screen.get_width() / 4
+        return line_rect

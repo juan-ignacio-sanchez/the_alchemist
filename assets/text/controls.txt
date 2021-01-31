@@ -1,0 +1,15 @@
+~ KEYBOARD SETTINGS ~
+
+PAUSE: P
+RESTART: R
+MOVE UP: Up Arrow
+MOVE DOWN: Aown Arrow
+MOVE LEFT: Left Arrow
+MOVE RIGHT: Right Arrow
+
+QUIT: Alt + F4 (Windows) / Cmd + Q (Mac)
+
+~ Quod est superius est sicut quod inferius, ~
+~ et quod inferius est sicut quod est superius ~
+
+PRESS ESC TO EXIT
