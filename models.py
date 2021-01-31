@@ -8,6 +8,7 @@ import pygame.freetype
 from pygame.sprite import Sprite
 from pygame.math import Vector2
 
+import settings
 from constants import FACING_WEST, FACING_EAST, CHARACTERS, CHARACTERS_DICT, MOBS_DICT, GREEN_LIQUID_ITEM
 
 
@@ -204,6 +205,8 @@ class MainMenu(Sprite):
     def __init__(self, surface: pygame.Surface):
         super().__init__()
         self.surface = surface
+        self.option_change_sound = pygame.mixer.Sound('./assets/sounds/menu_item_changed.ogg')
+        self.option_change_sound.set_volume(settings.VOLUME)
         self.selected_option = MainMenu.options.START
         self.options = [
             Option(surface, text="NEW GAME"),
@@ -235,9 +238,11 @@ class MainMenu(Sprite):
     def prev_option(self) -> int:
         self.selected_option = (self.selected_option - 1) % len(self.options)
         self.render()
+        self.option_change_sound.play()
         return self.selected_option
 
     def next_option(self) -> int:
         self.selected_option = (self.selected_option + 1) % len(self.options)
         self.render()
+        self.option_change_sound.play()
         return self.selected_option

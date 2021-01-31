@@ -25,7 +25,7 @@ class Game(Scene):
         self.last_paused = time()
         self.paused_surface = None
         # Images
-        self.sprites_image = pygame.image.load("assets/sprites/sprites.png").convert()
+        self.sprites_image = pygame.image.load("assets/sprites/sprites.png").convert_alpha()
         self.background = self._create_background()
         # Sounds
         self.bottle_picked = pygame.mixer.Sound("assets/sounds/bottle_picked.ogg")
@@ -95,6 +95,7 @@ class Game(Scene):
             self.enemy,
             self.player,
         )
+        self.paused = False
 
     def _stop(self):
         self.background_sound.stop()
