@@ -3,7 +3,7 @@
 PAUSE: P
 RESTART: R
 MOVE UP: Up Arrow
-MOVE DOWN: Aown Arrow
+MOVE DOWN: Down Arrow
 MOVE LEFT: Left Arrow
 MOVE RIGHT: Right Arrow
 
