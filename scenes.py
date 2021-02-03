@@ -6,7 +6,7 @@ import pygame
 import pygame.freetype
 from pygame.math import Vector2
 
-from models import Item, Player, Enemy, Score
+from models import Item, Player, Enemy, Score, PauseBanner, PlayerKilledBanner
 from constants import FACING_WEST
 from transformations import blur, greyscale
 import settings
@@ -26,6 +26,9 @@ class Game(Scene):
         self.paused = False
         self.last_paused = time()
         self.paused_surface = None
+        self.paused_banner = PauseBanner(self.screen)
+        # Killed State
+        self.player_killed_banner = PlayerKilledBanner(self.screen)
         # Images
         self.sprites_image = pygame.image.load("assets/sprites/sprites.png").convert_alpha()
         self.background = self._create_background()
@@ -68,15 +71,28 @@ class Game(Scene):
             (self.screen.get_rect().width, self.screen.get_rect().height)
         )
 
+    def _update_display(self):
+        self.all_sprites.clear(self.screen, self.background)
+        self.all_sprites.update(player_position=self.player.center_position)
+        sprites_dirty = self.all_sprites.draw(self.screen)
+
+        pygame.display.update(sprites_dirty)
+
     def _pause(self):
         if time() - self.last_paused > 0.5:
             self.paused = not self.paused
             self.last_paused = time()
             if self.paused:
+                self.player_killed_banner.kill()
+                self._update_display()
                 self.paused_surface = greyscale(pygame.display.get_surface())
+                self.paused_surface.blit(*self.paused_banner.render())
                 pygame.mixer.pause()
             else:
+                if not self.player.alive():
+                    self.all_sprites.add(self.player_killed_banner)
                 self._draw_background()
+                self._update_display()
                 pygame.display.flip()
                 pygame.mixer.unpause()
 
@@ -129,6 +145,7 @@ class Game(Scene):
                 # COLISSIONS ++++++++
                 if self.player.alive() and pygame.sprite.spritecollide(self.player, self.mobs_sprites, dokill=False):
                     self.player.kill()
+                    self.all_sprites.add(self.player_killed_banner)
                     self.player_killed_sound.play()
                     self.background_sound.stop()
                     self.ending_sound.play(loops=-1)
@@ -142,12 +159,7 @@ class Game(Scene):
                     self.bottle_picked.play()
                     self.mana.spawn()
                 # +++++++++++++++++++
-
-                self.all_sprites.clear(self.screen, self.background)
-                self.all_sprites.update(player_position=self.player.center_position)
-                sprites_dirty = self.all_sprites.draw(self.screen)
-
-                pygame.display.update(sprites_dirty)
+                self._update_display()
             else:
                 self.screen.blit(self.paused_surface, (0, 0, *self.display_size))
                 pygame.display.update()

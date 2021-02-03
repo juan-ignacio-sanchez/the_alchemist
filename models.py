@@ -252,3 +252,69 @@ class MainMenu(Sprite):
         self.render()
         self.option_change_sound.play()
         return self.selected_option
+
+
+class PlayerKilledBanner(Sprite):
+    def __init__(self, screen: pygame.Surface):
+        super().__init__()
+        self.main_text = "Mastering alchemy is not that easy!"
+        self.secondary_text = "Press R to restart, or ESC to exit"
+        self.screen = screen
+        self.main_fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 52)
+        self.secondary_fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 22)
+        self.main_fnt.pad = self.secondary_fnt.pad = True
+
+    def update(self, *args, **kwargs):
+        main_surface, _ = self.main_fnt.render(text=self.main_text, fgcolor=pygame.color.Color("white"))
+        main_rect = main_surface.get_rect()
+
+        secondary_surface, _ = self.secondary_fnt.render(text=self.secondary_text, fgcolor=pygame.color.Color("white"))
+        secondary_rect = main_surface.get_rect()
+        secondary_rect.y += main_rect.height
+
+        self.image = pygame.surface.Surface(main_rect.union(secondary_rect).size, flags=pygame.SRCALPHA)
+
+        main_rect.centerx = self.image.get_rect().centerx
+        secondary_rect.centerx = main_rect.centerx
+
+        self.image.blits([
+            (main_surface, main_rect),
+            (secondary_surface, secondary_rect),
+        ])
+        self.rect = self.image.get_rect()
+        self.rect.center = self.screen.get_rect().center
+
+
+class PauseBanner(Sprite):
+    def __init__(self, screen: pygame.Surface):
+        super().__init__()
+        self.paused_text = "Paused"
+        self.helper_text = "Press P to resume"
+        self.screen = screen
+        self.paused_fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 62)
+        self.helper_fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 32)
+        self.paused_fnt.pad = self.helper_fnt.pad = True
+        self.output_surface = None
+        self.output_rect = None
+
+    def render(self, *args, **kwargs):
+        paused_surface, _ = self.paused_fnt.render(text=self.paused_text, fgcolor=pygame.color.Color("white"))
+        paused_rect = paused_surface.get_rect()
+
+        helper_surface, _ = self.helper_fnt.render(text=self.helper_text, fgcolor=pygame.color.Color("white"))
+        helper_rect = helper_surface.get_rect()
+        helper_rect.y += paused_rect.height
+
+        self.output_surface = pygame.surface.Surface(paused_rect.union(helper_rect).size, flags=pygame.SRCALPHA)
+
+        paused_rect.centerx = self.output_surface.get_rect().centerx
+        helper_rect.centerx = paused_rect.centerx
+
+        self.output_surface.blits([
+            (paused_surface, paused_rect),
+            (helper_surface, helper_rect),
+        ])
+        self.output_rect = self.output_surface.get_rect()
+        self.output_rect.center = self.screen.get_rect().center
+
+        return self.output_surface, self.output_rect
