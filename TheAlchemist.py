@@ -1,4 +1,6 @@
+import os
 from collections import namedtuple
+import sys
 
 import pygame
 import pygame.freetype
@@ -82,4 +84,6 @@ def main():
 
 
 if __name__ == '__main__':
+    if hasattr(sys, "_MEIPASS"):
+        os.chdir(sys._MEIPASS)
     main()

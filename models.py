@@ -141,20 +141,20 @@ class Player(Walker):
             self.facing = FACING_WEST
             self.image = pygame.transform.flip(self.image, True, False)
 
-    def on_key_pressed(self, key):
+    def on_key_pressed(self, event_key, keys):
         magnitude = .5
-        if key == pygame.K_RIGHT:
+        if keys[pygame.K_RIGHT]:
             self.apply_force(Vector2(magnitude, 0))
-        elif key == pygame.K_LEFT:
+        if keys[pygame.K_LEFT]:
             self.apply_force(Vector2(-magnitude, 0))
-        elif key == pygame.K_UP:
+        if keys[pygame.K_UP]:
             self.apply_force(Vector2(0, -magnitude))
-        elif key == pygame.K_DOWN:
+        if keys[pygame.K_DOWN]:
             self.apply_force(Vector2(0, magnitude))
-        elif key == pygame.K_s:
+        if keys[pygame.K_s]:
             self.next_skin()
 
-        self.change_facing(key)
+        self.change_facing(event_key)
 
     def update(self, *args, **kwargs) -> None:
         self.move()

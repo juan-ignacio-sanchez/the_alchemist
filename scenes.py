@@ -56,8 +56,11 @@ class Game(Scene):
         self.screen.blit(self.background, (0, 0, *self.display_size))
 
     def _select_background_sound(self):
-        sounds = Path('assets/sounds/background/')
-        return random.choice(list(sounds.glob("*.mp3")))
+        sounds = Path('./assets/sounds/background/')
+        if sounds.exists():
+            return random.choice(list(sounds.glob("*.mp3")))
+        else:
+            raise ValueError(f"{sounds} does not exists: Resolved path -> {sounds.resolve()}")
 
     def _create_background(self) -> pygame.Surface:
         return pygame.transform.scale(
@@ -120,7 +123,7 @@ class Game(Scene):
                     elif event.key in (pygame.K_p, pygame.K_PAUSE):
                         self._pause()
                     elif not self.paused:
-                        self.player.on_key_pressed(event.key)
+                        self.player.on_key_pressed(event.key, pygame.key.get_pressed())
 
             if not self.paused:
                 # COLISSIONS ++++++++
