@@ -4,11 +4,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pyinstaller = "4.2"
 
 [packages]
-pygame = "*"
-pyinstaller = "*"
-numpy = "*"
+pygame = "2.0.1"
+numpy = "1.19.5"
 
 [requires]
 python_version = "3.9"

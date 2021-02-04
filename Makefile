@@ -1,4 +1,4 @@
-clean-build:
+clean:
 	rm -rf build/
 	rm -rf dist/
 	rm -r *.pyo
@@ -10,3 +10,10 @@ spec:
 
 build:
 	pyinstaller TheAlchemist.spec --noconfirm
+
+install:
+	pip3 install pipenv
+	pipenv install
+
+play:
+	pipenv run python ./TheAlchemist.py
