@@ -126,13 +126,6 @@ class Player(Walker):
         self.image = self.original_image.subsurface(skin_rect)
         self.image = pygame.transform.scale(self.image, [side * 5 for side in skin_rect.size])
 
-    def next_skin(self):
-        if time.time() - self.last_skin_change > 1:
-            print("skin changed!")
-            self.skin = CHARACTERS[(CHARACTERS.index(self.skin) + 1) % len(CHARACTERS)]
-            self.set_skin()
-            self.last_skin_change = time.time()
-
     def change_facing(self, key):
         if key == pygame.K_RIGHT and not self.facing == FACING_EAST:
             self.facing = FACING_EAST
@@ -151,8 +144,6 @@ class Player(Walker):
             self.apply_force(Vector2(0, -magnitude))
         if keys[pygame.K_DOWN]:
             self.apply_force(Vector2(0, magnitude))
-        if keys[pygame.K_s]:
-            self.next_skin()
 
         self.change_facing(event_key)
 

@@ -24,7 +24,7 @@ def main():
     game = Game(screen, display_size, main_clock)
 
     menu_background = greyscale(game.background)
-    main_menu_sound = pygame.mixer.Sound("assets/sounds/main_menu.mp3")
+    main_menu_sound = pygame.mixer.Sound("assets/sounds/main_menu.ogg")
     main_menu_sound.set_volume(settings.VOLUME)
     main_menu_sound.play(loops=-1)
 

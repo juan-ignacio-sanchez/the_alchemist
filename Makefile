@@ -12,8 +12,8 @@ build:
 	pyinstaller TheAlchemist.spec --noconfirm
 
 install:
-	pip3 install pipenv
-	pipenv install
+	pip3 install --user pipenv
+	python3 -m pipenv install
 
 play:
-	pipenv run python ./TheAlchemist.py
+	python3 -m pipenv run python ./TheAlchemist.py

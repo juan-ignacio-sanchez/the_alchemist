@@ -37,7 +37,7 @@ class Game(Scene):
         self.player_killed_sound = pygame.mixer.Sound("assets/sounds/kill.ogg")
         self.background_sound = pygame.mixer.Sound(self._select_background_sound())
         self.background_sound.set_volume(settings.VOLUME)
-        self.ending_sound = pygame.mixer.Sound("assets/sounds/ending.mp3")
+        self.ending_sound = pygame.mixer.Sound("assets/sounds/ending.ogg")
         self.ending_sound.set_volume(settings.VOLUME)
 
         # Sprites
@@ -61,7 +61,7 @@ class Game(Scene):
     def _select_background_sound(self):
         sounds = Path('./assets/sounds/background/')
         if sounds.exists():
-            return random.choice(list(sounds.glob("*.mp3")))
+            return random.choice(list(sounds.glob("*.ogg")))
         else:
             raise ValueError(f"{sounds} does not exists: Resolved path -> {sounds.resolve()}")
 
