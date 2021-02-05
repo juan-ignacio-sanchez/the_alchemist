@@ -8,6 +8,11 @@ clean:
 spec:
 	 pyi-makespec TheAlchemist.py  --noconsole --onefile --icon=./assets/sprites/icon.icns --add-data './assets:./assets'
 
+build-linux:
+	echo "Not implemented yet."
+	# python -m compileall .
+	# for path in $(wildcard ./__pycache__/*.pyc); do echo "$($$path:%cpython%=%hola%)"; done;
+
 build:
 	pyinstaller TheAlchemist.spec --noconfirm
 
