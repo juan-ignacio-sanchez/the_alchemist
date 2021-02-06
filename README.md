@@ -1,5 +1,16 @@
 # Running/Installing
 
+## Windows
+
+1. You should have Python 3.9.x installed on your system.
+   It can be downloaded and installed easily from Microsoft Store.
+2. On the project's root folder run:
+    install-win.bat
+3. Then you can play the game by running:
+    run-win.bat
+
+Note: The "installation" script, will tell you what it's going to do.
+
 ## MacOS
 
 Standalone .dmg file built with PyInstaller.

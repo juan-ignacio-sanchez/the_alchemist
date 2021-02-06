@@ -7,7 +7,7 @@ rm -rf ./__pycache__
 python -m compileall .
 
 # Move some files that will be needed during the instalation on the target.
-cp -r ./assets README.md Makefile Pipfile* ./__pycache__
+cp -r ./assets README.md *.bat Pipfile* ./__pycache__
 
 # Move into the compiled files directory
 cd ./__pycache__
@@ -25,4 +25,4 @@ mkdir TheAlchemist
 mv * ./TheAlchemist
 
 # Zipping
-zip -r TheAlchemist-lin.zip ./TheAlchemist
+zip -r TheAlchemist-win.zip ./TheAlchemist
