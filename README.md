@@ -6,7 +6,7 @@ Standalone .dmg file built with PyInstaller.
 
 ## Linux
 
-1. You should have Python 3.7+ installed on your system.
+1. You should have Python 3.9.x installed on your system.
 2. On the project's root folder run:
     1. make install
     2. make play
