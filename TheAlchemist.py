@@ -1,6 +1,7 @@
 import os
-from collections import namedtuple
 import sys
+from collections import namedtuple
+from pathlib import Path
 
 import pygame
 import pygame.freetype
@@ -33,7 +34,7 @@ def main():
     game = Game(screen, display_size, main_clock)
 
     menu_background = greyscale(game.background)
-    main_menu_sound = pygame.mixer.Sound("assets/sounds/main_menu.ogg")
+    main_menu_sound = pygame.mixer.Sound(Path("assets/sounds/main_menu.ogg"))
     main_menu_sound.set_volume(settings.VOLUME)
     main_menu_sound.play(loops=-1)
 

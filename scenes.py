@@ -8,7 +8,7 @@ from pygame.math import Vector2
 
 from models import Item, Player, Enemy, Score, PauseBanner, PlayerKilledBanner
 from constants import FACING_WEST
-from transformations import blur, greyscale
+from transformations import greyscale
 import settings
 
 
@@ -30,14 +30,14 @@ class Game(Scene):
         # Killed State
         self.player_killed_banner = PlayerKilledBanner(self.screen)
         # Images
-        self.sprites_image = pygame.image.load("assets/sprites/sprites.png").convert_alpha()
+        self.sprites_image = pygame.image.load(Path("assets/sprites/sprites.png")).convert_alpha()
         self.background = self._create_background()
         # Sounds
-        self.bottle_picked = pygame.mixer.Sound("assets/sounds/bottle_picked.ogg")
-        self.player_killed_sound = pygame.mixer.Sound("assets/sounds/kill.ogg")
+        self.bottle_picked = pygame.mixer.Sound(Path("assets/sounds/bottle_picked.ogg"))
+        self.player_killed_sound = pygame.mixer.Sound(Path("assets/sounds/kill.ogg"))
         self.background_sound = pygame.mixer.Sound(self._select_background_sound())
         self.background_sound.set_volume(settings.VOLUME)
-        self.ending_sound = pygame.mixer.Sound("assets/sounds/ending.ogg")
+        self.ending_sound = pygame.mixer.Sound(Path("assets/sounds/ending.ogg"))
         self.ending_sound.set_volume(settings.VOLUME)
 
         # Sprites
@@ -171,7 +171,7 @@ class TextScene(Scene):
         self.screen = screen
         self.display_size = display_size
         self.main_clock = main_clock
-        self.fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 20)
+        self.fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 20)
         self.fnt.pad = True
         self.credits_text = Path(path)
         self.background = background
@@ -207,12 +207,12 @@ class TextScene(Scene):
 
 class CreditsScene(TextScene):
     def __init__(self, *args, **kwargs):
-        super().__init__(path="./assets/text/credits.txt", *args, **kwargs)
+        super().__init__(path=Path("./assets/text/credits.txt"), *args, **kwargs)
 
 
 class ControlsScene(TextScene):
     def __init__(self, *args, **kwargs):
-        super().__init__(path="./assets/text/controls.txt", *args, **kwargs)
+        super().__init__(path=Path("./assets/text/controls.txt"), *args, **kwargs)
 
     def align(self, line_rect, last_y):
         line_rect.y += last_y

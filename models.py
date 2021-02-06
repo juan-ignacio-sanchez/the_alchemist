@@ -1,7 +1,7 @@
-import os
 import time
 import random
 from enum import IntEnum
+from pathlib import Path
 
 import pygame
 import pygame.freetype
@@ -9,7 +9,7 @@ from pygame.sprite import Sprite
 from pygame.math import Vector2
 
 import settings
-from constants import FACING_WEST, FACING_EAST, CHARACTERS, CHARACTERS_DICT, MOBS_DICT, WIDE_GREEN_LIQUID_ITEM
+from constants import FACING_WEST, FACING_EAST, CHARACTERS_DICT, MOBS_DICT, WIDE_GREEN_LIQUID_ITEM
 
 
 class Item(Sprite):
@@ -53,7 +53,7 @@ class Walker(Sprite):
         self.acceleration = Vector2(0, 0)
 
         # Sound
-        self.knock = pygame.mixer.Sound("assets/sounds/boundary_hit.ogg")
+        self.knock = pygame.mixer.Sound(Path("assets/sounds/boundary_hit.ogg"))
 
     def restore_initial_position(self):
         self.velocity.update(0, 0)
@@ -158,7 +158,7 @@ class Score(Sprite):
         self.surface = surface
         # upper left corner with a font size of 64
         # the number 200 for the width is arbitrary
-        self.fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 32)  # FIXME: adjust size
+        self.fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 32)  # FIXME: adjust size
         self.value = 0
 
     def update(self, *args, **kwargs) -> None:
@@ -171,7 +171,7 @@ class Option(Sprite):
         super().__init__()
         self.text = text
         self.surface = surface
-        self.fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", size)
+        self.fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), size)
         self.fnt.underline_adjustment = 1
         self.fnt.pad = True
         self.interlined = interlined
@@ -200,7 +200,7 @@ class MainMenu(Sprite):
         super().__init__()
         self.surface = surface
         self.title = Option(surface, text="~ The Alchemist ~", size=70, interlined=70)
-        self.option_change_sound = pygame.mixer.Sound('./assets/sounds/menu_item_changed.ogg')
+        self.option_change_sound = pygame.mixer.Sound(Path('./assets/sounds/menu_item_changed.ogg'))
         self.option_change_sound.set_volume(settings.VOLUME)
         self.selected_option = MainMenu.options.START
         self.options = [
@@ -251,8 +251,8 @@ class PlayerKilledBanner(Sprite):
         self.main_text = "Mastering alchemy is not that easy!"
         self.secondary_text = "Press R to restart, or ESC to exit"
         self.screen = screen
-        self.main_fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 52)
-        self.secondary_fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 22)
+        self.main_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 52)
+        self.secondary_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 22)
         self.main_fnt.pad = self.secondary_fnt.pad = True
 
     def update(self, *args, **kwargs):
@@ -282,8 +282,8 @@ class PauseBanner(Sprite):
         self.paused_text = "Paused"
         self.helper_text = "Press P to resume"
         self.screen = screen
-        self.paused_fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 62)
-        self.helper_fnt = pygame.freetype.Font("./assets/fonts/young_serif_regular.otf", 32)
+        self.paused_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 62)
+        self.helper_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 32)
         self.paused_fnt.pad = self.helper_fnt.pad = True
         self.output_surface = None
         self.output_rect = None
