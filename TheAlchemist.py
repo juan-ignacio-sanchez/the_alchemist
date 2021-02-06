@@ -7,6 +7,7 @@ import pygame
 import pygame.freetype
 
 import settings
+from constants import MAIN_MENU_SOUND
 from scenes import Game, CreditsScene, ControlsScene
 from models import MainMenu
 from transformations import greyscale
@@ -34,7 +35,7 @@ def main():
     game = Game(screen, display_size, main_clock)
 
     menu_background = greyscale(game.background)
-    main_menu_sound = pygame.mixer.Sound(Path("assets/sounds/main_menu.ogg"))
+    main_menu_sound = pygame.mixer.Sound(Path(MAIN_MENU_SOUND))
     main_menu_sound.set_volume(settings.VOLUME)
     main_menu_sound.play(loops=-1)
 

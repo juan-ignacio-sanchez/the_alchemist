@@ -7,7 +7,14 @@ import pygame.freetype
 from pygame.math import Vector2
 
 from models import Item, Player, Enemy, Score, PauseBanner, PlayerKilledBanner
-from constants import FACING_WEST
+from constants import (
+    FACING_WEST,
+    BACKGROUND_SOUND,
+    BOTTLE_PICKED_SFX,
+    PLAYER_KILLED_SFX,
+    ENDING_SOUND,
+
+)
 from transformations import greyscale
 import settings
 
@@ -33,11 +40,11 @@ class Game(Scene):
         self.sprites_image = pygame.image.load(Path("assets/sprites/sprites.png")).convert_alpha()
         self.background = self._create_background()
         # Sounds
-        self.bottle_picked = pygame.mixer.Sound(Path("assets/sounds/bottle_picked.ogg"))
-        self.player_killed_sound = pygame.mixer.Sound(Path("assets/sounds/kill.ogg"))
-        self.background_sound = pygame.mixer.Sound(self._select_background_sound())
+        self.bottle_picked = pygame.mixer.Sound(Path(BOTTLE_PICKED_SFX))
+        self.player_killed_sound = pygame.mixer.Sound(Path(PLAYER_KILLED_SFX))
+        self.background_sound = pygame.mixer.Sound(BACKGROUND_SOUND)
         self.background_sound.set_volume(settings.VOLUME)
-        self.ending_sound = pygame.mixer.Sound(Path("assets/sounds/ending.ogg"))
+        self.ending_sound = pygame.mixer.Sound(Path(ENDING_SOUND))
         self.ending_sound.set_volume(settings.VOLUME)
 
         # Sprites
@@ -57,13 +64,6 @@ class Game(Scene):
 
     def _draw_background(self):
         self.screen.blit(self.background, (0, 0, *self.display_size))
-
-    def _select_background_sound(self):
-        sounds = Path('./assets/sounds/background/')
-        if sounds.exists():
-            return random.choice(list(sounds.glob("*.ogg")))
-        else:
-            raise ValueError(f"{sounds} does not exists: Resolved path -> {sounds.resolve()}")
 
     def _create_background(self) -> pygame.Surface:
         return pygame.transform.scale(

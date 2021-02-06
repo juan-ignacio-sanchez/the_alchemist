@@ -32,3 +32,14 @@ MOBS = [
 
 GREEN_LIQUID_ITEM = (133, 212, 7, 11)
 WIDE_GREEN_LIQUID_ITEM = (196, 196, 9, 11)
+
+# Sound
+BACKGROUND_SOUND = "./assets/sounds/background/Guitar-Mayhem-6.wav"
+ENDING_SOUND = "assets/sounds/ending.wav"
+MAIN_MENU_SOUND = "assets/sounds/main_menu.wav"
+
+# SFX
+BOTTLE_PICKED_SFX = "assets/sounds/bottle_picked.wav"
+PLAYER_KILLED_SFX = "assets/sounds/kill.wav"
+WALL_HIT_SFX = "assets/sounds/boundary_hit.wav"
+MENU_ITEM_CHANGED_SFX = "./assets/sounds/menu_item_changed.wav"

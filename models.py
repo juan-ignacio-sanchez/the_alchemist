@@ -9,7 +9,15 @@ from pygame.sprite import Sprite
 from pygame.math import Vector2
 
 import settings
-from constants import FACING_WEST, FACING_EAST, CHARACTERS_DICT, MOBS_DICT, WIDE_GREEN_LIQUID_ITEM
+from constants import (
+    FACING_WEST,
+    FACING_EAST,
+    CHARACTERS_DICT,
+    MOBS_DICT,
+    WIDE_GREEN_LIQUID_ITEM,
+    WALL_HIT_SFX,
+    MENU_ITEM_CHANGED_SFX,
+)
 
 
 class Item(Sprite):
@@ -53,7 +61,7 @@ class Walker(Sprite):
         self.acceleration = Vector2(0, 0)
 
         # Sound
-        self.knock = pygame.mixer.Sound(Path("assets/sounds/boundary_hit.ogg"))
+        self.knock = pygame.mixer.Sound(Path(WALL_HIT_SFX))
 
     def restore_initial_position(self):
         self.velocity.update(0, 0)
@@ -200,7 +208,7 @@ class MainMenu(Sprite):
         super().__init__()
         self.surface = surface
         self.title = Option(surface, text="~ The Alchemist ~", size=70, interlined=70)
-        self.option_change_sound = pygame.mixer.Sound(Path('./assets/sounds/menu_item_changed.ogg'))
+        self.option_change_sound = pygame.mixer.Sound(Path(MENU_ITEM_CHANGED_SFX))
         self.option_change_sound.set_volume(settings.VOLUME)
         self.selected_option = MainMenu.options.START
         self.options = [
