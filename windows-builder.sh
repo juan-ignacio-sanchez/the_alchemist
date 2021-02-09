@@ -18,6 +18,12 @@ do
   mv $path $(echo $path | sed 's/.cpython-39//g')
 done
 
+# On linux and Mac, we are going to use .ogg audio files, so, we want to remove any .mp3 file present.
+# NOTE: preserve all .wav files, because they are SFX
+rm ./assets/sounds/*.ogg
+rm ./assets/sounds/background/*.ogg
+
+
 # Create a container folder
 mkdir TheAlchemist
 

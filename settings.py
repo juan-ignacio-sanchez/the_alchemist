@@ -1,3 +1,5 @@
+import os
+
 from pygame import FULLSCREEN, RESIZABLE, SCALED
 
 
@@ -7,3 +9,5 @@ VOLUME = 0.1
 #       github thread: https://github.com/pygame/pygame/issues/735
 DISPLAY_MODE_FULL = FULLSCREEN | SCALED
 DISPLAY_MODE_WIND = RESIZABLE | SCALED
+
+AUDIO_EXTENSION = ".ogg" if os.name == "posix" else ".mp3"
