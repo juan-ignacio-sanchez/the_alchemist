@@ -1,4 +1,3 @@
-import random
 from time import time
 from pathlib import Path
 
@@ -6,7 +5,15 @@ import pygame
 import pygame.freetype
 from pygame.math import Vector2
 
-from models import Item, Player, Enemy, Score, PauseBanner, PlayerKilledBanner
+from models import (
+    Item,
+    Player,
+    Enemy,
+    Score,
+    PauseBanner,
+    PlayerKilledBanner,
+    PlayerWonBanner
+)
 from constants import (
     FACING_WEST,
     BACKGROUND_SOUND,
@@ -15,7 +22,7 @@ from constants import (
     ENDING_SOUND,
 
 )
-from transformations import greyscale
+from transformations import greyscale, blur
 import settings
 
 
@@ -29,13 +36,18 @@ class Game(Scene):
         self.screen = screen
         self.display_size = display_size
         self.main_clock = main_clock
+        self.run = True
         # Pause settings
         self.paused = False
         self.last_paused = time()
         self.paused_surface = None
         self.paused_banner = PauseBanner(self.screen)
+        # Restart settings
+        self.last_restarted = time()
         # Killed State
         self.player_killed_banner = PlayerKilledBanner(self.screen)
+        # Won State
+        self.player_won_banner = PlayerWonBanner(self.screen)
         # Images
         self.sprites_image = pygame.image.load(Path("assets/sprites/sprites.png")).convert_alpha()
         self.background = self._create_background()
@@ -48,7 +60,7 @@ class Game(Scene):
         self.ending_sound.set_volume(settings.VOLUME)
 
         # Sprites
-        self.score = Score(self.screen)
+        self.score = Score(self.screen, max_score=25)
         # Player
         self.player = Player(self.screen, self.sprites_image, initial_position=(50, 50))
         self.player.velocity = Vector2(0, 0)
@@ -97,10 +109,13 @@ class Game(Scene):
                 pygame.mixer.unpause()
 
     def _restart(self):
-        self._stop()
-        return self._start()
+        if time() - self.last_restarted > 0.5:
+            self._stop(instantly=True)
+            self._start()
+        self.last_restarted = time()
 
     def _start(self):
+        self.run = True
         self._draw_background()
         pygame.display.flip()
         self.score.value = 0
@@ -118,21 +133,22 @@ class Game(Scene):
         )
         self.paused = False
 
-    def _stop(self):
-        self.background_sound.stop()
-        self.ending_sound.stop()
+    def _stop(self, instantly=False):
+        self.run = False
+        fadeout = self.score.transition_seconds * 1000 if not instantly else 0
+        self.background_sound.fadeout(fadeout)
+        self.ending_sound.fadeout(fadeout)
 
     def play(self):
-        run = True
         self._start()
 
-        while run:
+        while self.run:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    self._stop()
                     return True
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        run = False
                         self._stop()
                     elif event.key == pygame.K_r:
                         self._restart()
@@ -141,28 +157,53 @@ class Game(Scene):
                     elif not self.paused:
                         self.player.on_key_pressed(event.key, pygame.key.get_pressed())
 
-            if not self.paused:
-                # COLISSIONS ++++++++
+            if self.score.won():
+                if not self.all_sprites.has(self.player_won_banner):
+                    self.all_sprites.add(self.player_won_banner)
+                if self.score.quit_transition():
+                    self.screen.blit(blur(pygame.display.get_surface(), 2), (0, 0, *self.display_size))
+                    pygame.display.flip()
+                elif self.score.is_time_to_leave():
+                    self._update_display()
+                    self._stop()
+                else:
+                    self._update_display()
+            elif self.paused:
+                self.screen.blit(self.paused_surface, (0, 0, *self.display_size))
+                pygame.display.update()
+            else:
+                # COLLISIONS ++++++++
                 if self.player.alive() and pygame.sprite.spritecollide(self.player, self.mobs_sprites, dokill=False):
                     self.player.kill()
                     self.all_sprites.add(self.player_killed_banner)
                     self.player_killed_sound.play()
                     self.background_sound.stop()
                     self.ending_sound.play(loops=-1)
-                    self.enemy.velocity.update(0, 0)
-                    self.enemy.acceleration.update(0.01, 0.01)
+                    for enemy in self.mobs_sprites:
+                        enemy.velocity.update(0, 0)
+                        enemy.acceleration.update(0.01, 0.01)
 
-                if pygame.sprite.spritecollide(self.player, self.item_sprites,
-                                               dokill=False,
-                                               collided=pygame.sprite.collide_rect_ratio(0.7)):
-                    self.score.value += 1
+                bottles_picked = pygame.sprite.spritecollide(
+                    self.player, self.item_sprites,
+                    dokill=False, collided=pygame.sprite.collide_rect_ratio(0.7))
+
+                if bottles_picked:
                     self.bottle_picked.play()
-                    self.mana.spawn()
+                    self.score.increase()
+                    for bottle in bottles_picked:
+                        if bottle.color == Item.RED:
+                            extra_enemy = Enemy(self.screen, self.sprites_image,
+                                               skin='BLOOD_CRYING_MOB', facing=FACING_WEST,
+                                               initial_position=(self.screen.get_width(), 0))
+                            extra_enemy.velocity = Vector2(-.5, .5)
+                            self.mobs_sprites.add(extra_enemy)
+                            self.all_sprites.add(extra_enemy)
+                        if not self.score.won():
+                            bottle.spawn()
+                        else:
+                            bottle.kill()
                 # +++++++++++++++++++
                 self._update_display()
-            else:
-                self.screen.blit(self.paused_surface, (0, 0, *self.display_size))
-                pygame.display.update()
             self.main_clock.tick(60)
 
 

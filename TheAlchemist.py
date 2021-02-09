@@ -20,7 +20,8 @@ def main():
     pygame.mixer.init()
     pygame.freetype.init()
     main_clock = pygame.time.Clock()
-    display_size = Size(width=1280, height=800)
+    monitor_info = pygame.display.Info()
+    display_size = Size(width=monitor_info.current_w, height=monitor_info.current_h)
 
     if not sys.platform.startswith("linux"):
         if 0 != pygame.display.mode_ok(display_size, flags=settings.DISPLAY_MODE_FULL):

@@ -32,6 +32,8 @@ MOBS = [
 
 GREEN_LIQUID_ITEM = (133, 212, 7, 11)
 WIDE_GREEN_LIQUID_ITEM = (196, 196, 9, 11)
+WIDE_RED_LIQUID_ITEM = (196, 180, 9, 11)
+WIDE_BLUE_LIQUID_ITEM = (196, 212, 9, 11)
 
 # Sound
 BACKGROUND_SOUND = "./assets/sounds/background/Guitar-Mayhem-6.wav"
