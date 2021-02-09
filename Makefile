@@ -3,16 +3,17 @@ clean:
 	rm -rf dist/
 	rm -rf *.pyo
 	rm -rf *.pyc
-	rm -rf TheAlchemist.spec
-
-spec-mac:
-	 pyi-makespec TheAlchemist.py  --noconsole --onefile --icon=./assets/sprites/icon.icns --add-data './assets:./assets'
 
 build-mac:
-	pyinstaller TheAlchemist.spec --noconfirm
+	./mac-builder.sh
 
 build-linux:
 	./linux-builder.sh
+
+build-windows:
+	./windows-builder.sh
+
+build-all: build-linux build-mac build-windows
 
 install:
 	pip3 install --user pipenv

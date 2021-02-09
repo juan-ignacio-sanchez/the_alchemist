@@ -25,8 +25,8 @@ mkdir TheAlchemist
 mv * ./TheAlchemist
 
 # Zipping
-zip -r TheAlchemist-lin.zip ./TheAlchemist
+zip -r TheAlchemist-mac.zip ./TheAlchemist
 
 mkdir -p ../dist
 
-mv TheAlchemist-lin.zip ../dist
+mv TheAlchemist-mac.zip ../dist

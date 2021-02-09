@@ -26,3 +26,7 @@ mv * ./TheAlchemist
 
 # Zipping
 zip -r TheAlchemist-win.zip ./TheAlchemist
+
+mkdir -p ../dist
+
+mv TheAlchemist-win.zip ../dist

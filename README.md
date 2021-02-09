@@ -11,11 +11,7 @@
 
 Note: The "installation" script, will tell you what it's going to do.
 
-## MacOS
-
-Standalone .dmg file built with PyInstaller.
-
-## Linux
+## MacOS & Linux
 
 1. You should have Python 3.9.x installed on your system.
 2. On the project's root folder run:
