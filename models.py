@@ -15,24 +15,38 @@ from constants import (
     CHARACTERS_DICT,
     MOBS_DICT,
     WIDE_GREEN_LIQUID_ITEM,
+    WIDE_BLUE_LIQUID_ITEM,
+    WIDE_RED_LIQUID_ITEM,
     WALL_HIT_SFX,
     MENU_ITEM_CHANGED_SFX,
 )
 
 
 class Item(Sprite):
+    RED = 0
+    GREEN = 1
+    BLUE = 2
+    BOTTLE_COLORS = {
+        RED: WIDE_RED_LIQUID_ITEM,
+        BLUE: WIDE_BLUE_LIQUID_ITEM,
+        GREEN: WIDE_GREEN_LIQUID_ITEM,
+    }
     def __init__(self, surface, image, initial_position=(100, 100)):
         super().__init__()
         self.surface = surface
         self.original_image = image
-        skin_rect = pygame.rect.Rect(WIDE_GREEN_LIQUID_ITEM)
-        self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 4 for side in skin_rect.size])
-
-        self.rect = self.image.get_rect()
+        self.spawn()
         self.rect.center = initial_position
 
-    def spawn(self, position=None):
+    def spawn(self, position=None, color=None):
+        if not color:
+            self.color = random.choice(range(len(Item.BOTTLE_COLORS)))
+        else:
+            self.color = color
+        skin_rect = pygame.Rect(Item.BOTTLE_COLORS[self.color])
+        self.image = self.original_image.subsurface(skin_rect)
+        self.image = pygame.transform.scale(self.image, [side * 4 for side in skin_rect.size])
+        self.rect = self.image.get_rect()
         self.rect.center = Vector2(
             random.randint(100, self.surface.get_width() - 100),
             random.randint(100, self.surface.get_height() - 100)
@@ -125,14 +139,14 @@ class Enemy(Walker):
         self.facing = FACING_WEST
         skin_rect = pygame.rect.Rect(MOBS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 5 for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * 6 for side in skin_rect.size])
 
 
 class Player(Walker):
     def set_skin(self):
         skin_rect = pygame.rect.Rect(CHARACTERS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 5 for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * 6 for side in skin_rect.size])
 
     def change_facing(self, key):
         if key == pygame.K_RIGHT and not self.facing == FACING_EAST:
@@ -161,16 +175,41 @@ class Player(Walker):
 
 
 class Score(Sprite):
-    def __init__(self, surface):
+    # TODO: This class might evolve into a GameState class
+    def __init__(self, surface, max_score, seconds_to_leave=3):
         super().__init__()
         self.surface = surface
         # upper left corner with a font size of 64
         # the number 200 for the width is arbitrary
         self.fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 32)  # FIXME: adjust size
         self.value = 0
+        self.max_score = max_score
+        self.win_timestamp = None
+        self.seconds_to_leave = seconds_to_leave
+        self.transition_seconds = 1
+
+    def quit_transition(self):
+        if self.win_timestamp:
+            return self.seconds_to_leave - self.transition_seconds <= (time.time() - self.win_timestamp) <= self.seconds_to_leave
+        else:
+            return False
+
+    def is_time_to_leave(self):
+        if self.win_timestamp:
+            return (time.time() - self.win_timestamp) >= self.seconds_to_leave
+        else:
+            return False
+
+    def won(self):
+        return self.value == self.max_score
+
+    def increase(self, amount=1):
+        self.value += 1
+        if self.value == self.max_score:
+            self.win_timestamp = time.time()
 
     def update(self, *args, **kwargs) -> None:
-        self.image, self.rect = self.fnt.render(f"Score: {self.value}", pygame.color.Color("white"))
+        self.image, self.rect = self.fnt.render(f"Potions left: {self.max_score - self.value}", pygame.color.Color("white"))
         self.rect.center = [(self.rect.width / 2) + 5, (self.rect.height / 2) + 5]
 
 
@@ -251,6 +290,29 @@ class MainMenu(Sprite):
         self.render()
         self.option_change_sound.play()
         return self.selected_option
+
+
+class PlayerWonBanner(Sprite):
+    def __init__(self, screen: pygame.Surface):
+        super().__init__()
+        self.main_text = "You Win!"
+        self.screen = screen
+        self.main_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 52)
+        self.main_fnt.pad = True
+
+    def update(self, *args, **kwargs):
+        main_surface, _ = self.main_fnt.render(text=self.main_text, fgcolor=pygame.color.Color("white"))
+        main_rect = main_surface.get_rect()
+
+        self.image = pygame.surface.Surface(main_rect.size, flags=pygame.SRCALPHA)
+
+        main_rect.centerx = self.image.get_rect().centerx
+
+        self.image.blits([
+            (main_surface, main_rect),
+        ])
+        self.rect = self.image.get_rect()
+        self.rect.center = self.screen.get_rect().center
 
 
 class PlayerKilledBanner(Sprite):
