@@ -9,6 +9,7 @@ from models import (
     Item,
     Player,
     Enemy,
+    Weapon,
     Score,
     PauseBanner,
     PlayerKilledBanner,
@@ -74,6 +75,9 @@ class Game(Scene):
         # Items
         self.mana = Item(self.screen, self.sprites_image)
 
+        # Weapons
+        self.weapon = Weapon(self.screen, self.sprites_image, self.player)
+
     def _draw_background(self):
         self.screen.blit(self.background, (0, 0, *self.display_size))
 
@@ -125,11 +129,13 @@ class Game(Scene):
         self.player_sprites = pygame.sprite.RenderUpdates(self.player)
         self.item_sprites = pygame.sprite.RenderUpdates(self.mana)
         self.mobs_sprites = pygame.sprite.RenderUpdates(self.enemy)
+        self.weapons_sprites = pygame.sprite.RenderUpdates(self.weapon)
         self.all_sprites = pygame.sprite.OrderedUpdates(
             self.score,
             self.mana,
             self.enemy,
             self.player,
+            self.weapon,
         )
         self.paused = False
 

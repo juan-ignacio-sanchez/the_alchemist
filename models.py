@@ -19,6 +19,8 @@ from constants import (
     WIDE_RED_LIQUID_ITEM,
     WALL_HIT_SFX,
     MENU_ITEM_CHANGED_SFX,
+    BASIC_SWORD,
+    SCALE_FACTOR,
 )
 
 
@@ -31,6 +33,7 @@ class Item(Sprite):
         BLUE: WIDE_BLUE_LIQUID_ITEM,
         GREEN: WIDE_GREEN_LIQUID_ITEM,
     }
+
     def __init__(self, surface, image, initial_position=(100, 100)):
         super().__init__()
         self.surface = surface
@@ -45,7 +48,7 @@ class Item(Sprite):
             self.color = color
         skin_rect = pygame.Rect(Item.BOTTLE_COLORS[self.color])
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 4 for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * SCALE_FACTOR for side in skin_rect.size])
         self.rect = self.image.get_rect()
         self.rect.center = Vector2(
             random.randint(100, self.surface.get_width() - 100),
@@ -139,14 +142,14 @@ class Enemy(Walker):
         self.facing = FACING_WEST
         skin_rect = pygame.rect.Rect(MOBS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 6 for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * SCALE_FACTOR for side in skin_rect.size])
 
 
 class Player(Walker):
     def set_skin(self):
         skin_rect = pygame.rect.Rect(CHARACTERS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * 6 for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * SCALE_FACTOR for side in skin_rect.size])
 
     def change_facing(self, key):
         if key == pygame.K_RIGHT and not self.facing == FACING_EAST:
@@ -379,3 +382,21 @@ class PauseBanner(Sprite):
         self.output_rect.center = self.screen.get_rect().center
 
         return self.output_surface, self.output_rect
+
+
+class Weapon(Sprite):
+    def __init__(self, surface, image, owner: Player):
+        super().__init__()
+        self.surface = surface
+        self.original_image = image
+        self.owner = owner
+
+        weapon_rect = pygame.Rect(BASIC_SWORD)
+        self.image = self.original_image.subsurface(weapon_rect)
+        self.image = pygame.transform.scale(self.image, [side * SCALE_FACTOR for side in weapon_rect.size])
+
+        self.rect = self.image.get_rect()
+        self.rect.center = owner.rect.center
+
+    def update(self, *args, **kwargs):
+        self.rect.center = self.owner.rect.center
