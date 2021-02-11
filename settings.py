@@ -10,4 +10,4 @@ VOLUME = 0.1
 DISPLAY_MODE_FULL = FULLSCREEN | SCALED
 DISPLAY_MODE_WIND = RESIZABLE | SCALED
 
-AUDIO_EXTENSION = ".ogg" if os.name == "posix" else ".mp3"
+AUDIO_EXTENSION = ".ogg" if os.name == "posix" else ".wav"

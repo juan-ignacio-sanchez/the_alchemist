@@ -20,8 +20,8 @@ done
 
 # On linux and Mac, we are going to use .ogg audio files, so, we want to remove any .mp3 file present.
 # NOTE: preserve all .wav files, because they are SFX
-rm ./assets/sounds/*.mp3
-rm ./assets/sounds/background/*.mp3
+rm ./assets/sounds/*.wav
+rm ./assets/sounds/background/*.wav
 
 # Create a container folder
 mkdir TheAlchemist
