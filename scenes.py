@@ -1,5 +1,6 @@
 from time import time
 from pathlib import Path
+from random import choice
 
 import pygame
 import pygame.freetype
@@ -21,6 +22,7 @@ from constants import (
     BOTTLE_PICKED_SFX,
     PLAYER_KILLED_SFX,
     ENDING_SOUND,
+    MOBS_DICT,
 
 )
 from transformations import greyscale, blur
@@ -205,7 +207,7 @@ class Game(Scene):
                     for bottle in bottles_picked:
                         if bottle.color == Item.RED:
                             extra_enemy = Enemy(self.screen, self.sprites_image,
-                                               skin='BLOOD_CRYING_MOB', facing=FACING_WEST,
+                                               skin=choice(list(MOBS_DICT)), facing=FACING_WEST,
                                                initial_position=(self.screen.get_width(), 0))
                             extra_enemy.velocity = Vector2(-.5, .5)
                             self.mobs_sprites.add(extra_enemy)
