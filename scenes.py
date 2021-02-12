@@ -59,7 +59,9 @@ class Game(Scene):
         self.background = self._create_background()
         # Sounds
         self.bottle_picked = pygame.mixer.Sound(Path(BOTTLE_PICKED_SFX))
+        self.bottle_picked.set_volume(settings.SFX_VOLUME)
         self.player_killed_sound = pygame.mixer.Sound(Path(PLAYER_KILLED_SFX))
+        self.player_killed_sound.set_volume(settings.SFX_VOLUME)
         self.background_sound = pygame.mixer.Sound(BACKGROUND_SOUND)
         self.background_sound.set_volume(settings.VOLUME)
         self.ending_sound = pygame.mixer.Sound(Path(ENDING_SOUND))

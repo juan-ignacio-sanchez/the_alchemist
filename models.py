@@ -80,6 +80,7 @@ class Walker(Sprite):
 
         # Sound
         self.knock = pygame.mixer.Sound(Path(WALL_HIT_SFX))
+        self.knock.set_volume(settings.SFX_VOLUME)
 
     def restore_initial_position(self):
         self.velocity.update(0, 0)
@@ -254,7 +255,7 @@ class MainMenu(Sprite):
         self.surface = surface
         self.title = Option(surface, text="~ The Alchemist ~", size=70, interlined=70)
         self.option_change_sound = pygame.mixer.Sound(Path(MENU_ITEM_CHANGED_SFX))
-        self.option_change_sound.set_volume(settings.VOLUME)
+        self.option_change_sound.set_volume(settings.SFX_VOLUME)
         self.selected_option = MainMenu.options.START
         self.options = [
             Option(surface, text="NEW GAME"),
@@ -391,13 +392,14 @@ class Weapon(Sprite):
     STATIC = 0
     UP = 1
     DOWN = 2
+
     def __init__(self, surface, image, owner: Player):
         super().__init__()
         self.surface = surface
         self.original_image = image
         self.owner = owner
         self.sound = pygame.mixer.Sound(Path("assets/sounds/sfx/sword_brandishing.wav"))
-        self.sound.set_volume(settings.VOLUME)
+        self.sound.set_volume(settings.SFX_VOLUME)
 
         weapon_rect = pygame.Rect(BASIC_SWORD)
         self.image = self.original_image.subsurface(weapon_rect)
@@ -408,8 +410,10 @@ class Weapon(Sprite):
         self.rect.center = owner.rect.center
 
         self.brandishing = Weapon.STATIC
+        self.pivot = Vector2(self.rect.centerx, self.rect.centery + (self.rect.height // 2))
+        self.rotation_vector = self.rect.center - self.pivot
         self.sword_angle = 0
-        self.angle_diff = 1
+        self.angle_diff = 0.5
 
     def update(self, *args, **kwargs):
         FACING = 1 if self.owner.facing == FACING_EAST else -1
@@ -424,12 +428,15 @@ class Weapon(Sprite):
             self.sword_angle = 0
             self.brandishing = Weapon.STATIC
 
-        self.angle_diff += 5
+        self.angle_diff += 9
         self.image = pygame.transform.rotate(self._image, -FACING * self.sword_angle)
+        rotated_vector = self.rotation_vector.rotate(FACING * self.sword_angle)
+        relocation_vector = rotated_vector - self.rotation_vector
         self.rect = self.image.get_rect()
-
         self.rect.center = self.owner.rect.center
         self.rect.centerx += FACING * (self.owner.rect.width / 1.5)
+        self.rect.centery -= self.owner.rect.height / 4
+        self.rect.center += relocation_vector
         if not self.owner.alive():
             self.kill()
 
