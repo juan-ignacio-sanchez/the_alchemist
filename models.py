@@ -103,22 +103,24 @@ class Walker(Sprite):
         self.acceleration.update(0, 0)
 
     def bounce(self):
+        FRICTION = 0.2
+        vel_copy = Vector2(self.velocity)
         if not 0 < self.center_position.x:
             self.center_position.x = 0
-            self.velocity.x *= -1
+            self.velocity.x *= -1 * FRICTION
             self.knock.play()
         elif not self.center_position.x < self.surface.get_width():
             self.center_position.x = self.surface.get_width()
-            self.velocity.x *= -1
+            self.velocity.x *= -1 * FRICTION
             self.knock.play()
 
         if not 0 < self.center_position.y:
             self.center_position.y = 0
-            self.velocity.y *= -1
+            self.velocity.y *= -1 * FRICTION
             self.knock.play()
         elif not self.center_position.y < self.surface.get_height():
             self.center_position.y = self.surface.get_height()
-            self.velocity.y *= -1
+            self.velocity.y *= -1 * FRICTION
             self.knock.play()
 
 
@@ -134,7 +136,7 @@ class Enemy(Walker):
     def update(self, *args, **kwargs) -> None:
         # Follow the player
         distance_vector = (kwargs.get('player_position') - self.center_position).normalize()
-        self.apply_force(distance_vector * 0.3 / (distance_vector.magnitude() * 10))
+        self.apply_force(distance_vector * 2 / self.rect.height)
         self.move()
         self.bounce()
         self.change_facing()
