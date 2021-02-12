@@ -135,7 +135,6 @@ class Game(Scene):
             self.mana,
             self.enemy,
             self.player,
-            self.weapon,
         )
         self.paused = False
 
@@ -162,6 +161,7 @@ class Game(Scene):
                         self._pause()
                     elif not self.paused:
                         self.player.on_key_pressed(event.key, pygame.key.get_pressed())
+                        self.weapon.on_key_pressed(event.key, pygame.key.get_pressed())
 
             if self.score.won():
                 if not self.all_sprites.has(self.player_won_banner):
@@ -179,15 +179,22 @@ class Game(Scene):
                 pygame.display.update()
             else:
                 # COLLISIONS ++++++++
-                if self.player.alive() and pygame.sprite.spritecollide(self.player, self.mobs_sprites, dokill=False):
-                    self.player.kill()
-                    self.all_sprites.add(self.player_killed_banner)
-                    self.player_killed_sound.play()
-                    self.background_sound.stop()
-                    self.ending_sound.play(loops=-1)
-                    for enemy in self.mobs_sprites:
-                        enemy.velocity.update(0, 0)
-                        enemy.acceleration.update(0.01, 0.01)
+                if self.player.alive():
+                    player_mobs_collide = pygame.sprite.spritecollide(self.player, self.mobs_sprites, dokill=False)
+                    weapon_mobs_collide = pygame.sprite.spritecollide(self.weapon, self.mobs_sprites, dokill=False)
+                    if player_mobs_collide:
+                        self.player.kill()
+                        self.all_sprites.add(self.player_killed_banner)
+                        self.player_killed_sound.play()
+                        self.background_sound.stop()
+                        self.ending_sound.play(loops=-1)
+                        for enemy in self.mobs_sprites:
+                            enemy.velocity.update(0, 0)
+                            enemy.acceleration.update(0.01, 0.01)
+                    elif self.weapon.alive() and weapon_mobs_collide and self.weapon.brandishing != Weapon.STATIC:
+                        for mob in weapon_mobs_collide:
+                            mob.kill()
+                        self.weapon.kill()
 
                 bottles_picked = pygame.sprite.spritecollide(
                     self.player, self.item_sprites,
@@ -204,6 +211,8 @@ class Game(Scene):
                             extra_enemy.velocity = Vector2(-.5, .5)
                             self.mobs_sprites.add(extra_enemy)
                             self.all_sprites.add(extra_enemy)
+                        elif bottle.color == Item.BLUE:
+                            self.all_sprites.add(self.weapon)
                         if not self.score.won():
                             bottle.spawn()
                         else:

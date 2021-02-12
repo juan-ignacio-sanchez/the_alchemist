@@ -1,6 +1,7 @@
 import settings
 
 SCALE_FACTOR = 6
+ITEMS_SCALE_FACTOR = 4
 
 FACING_EAST = 0
 FACING_WEST = 1

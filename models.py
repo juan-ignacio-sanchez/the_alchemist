@@ -21,6 +21,7 @@ from constants import (
     MENU_ITEM_CHANGED_SFX,
     BASIC_SWORD,
     SCALE_FACTOR,
+    ITEMS_SCALE_FACTOR,
 )
 
 
@@ -48,7 +49,7 @@ class Item(Sprite):
             self.color = color
         skin_rect = pygame.Rect(Item.BOTTLE_COLORS[self.color])
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * SCALE_FACTOR for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * ITEMS_SCALE_FACTOR for side in skin_rect.size])
         self.rect = self.image.get_rect()
         self.rect.center = Vector2(
             random.randint(100, self.surface.get_width() - 100),
@@ -385,6 +386,9 @@ class PauseBanner(Sprite):
 
 
 class Weapon(Sprite):
+    STATIC = 0
+    UP = 1
+    DOWN = 2
     def __init__(self, surface, image, owner: Player):
         super().__init__()
         self.surface = surface
@@ -393,10 +397,38 @@ class Weapon(Sprite):
 
         weapon_rect = pygame.Rect(BASIC_SWORD)
         self.image = self.original_image.subsurface(weapon_rect)
-        self.image = pygame.transform.scale(self.image, [side * SCALE_FACTOR for side in weapon_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * ITEMS_SCALE_FACTOR for side in weapon_rect.size])
+        self._image = self.image.copy()
 
         self.rect = self.image.get_rect()
         self.rect.center = owner.rect.center
 
+        self.brandishing = Weapon.STATIC
+        self.sword_angle = 0
+        self.angle_diff = 1
+
     def update(self, *args, **kwargs):
+        FACING = 1 if self.owner.facing == FACING_EAST else -1
+        if self.brandishing == Weapon.DOWN:
+            self.sword_angle += self.angle_diff
+            if self.sword_angle >= 90:
+                self.brandishing = Weapon.UP
+        elif self.brandishing == Weapon.UP and self.sword_angle > 0:
+            self.sword_angle -= self.angle_diff
+        else:
+            self.angle_diff = 1
+            self.sword_angle = 0
+            self.brandishing = Weapon.STATIC
+
+        self.angle_diff += 5
+        self.image = pygame.transform.rotate(self._image, -FACING * self.sword_angle)
+        self.rect = self.image.get_rect()
+
         self.rect.center = self.owner.rect.center
+        self.rect.centerx += FACING * (self.owner.rect.width / 1.5)
+        if not self.owner.alive():
+            self.kill()
+
+    def on_key_pressed(self, event_key, keys):
+        if keys[pygame.K_SPACE]:
+            self.brandishing = Weapon.DOWN
