@@ -129,7 +129,6 @@ class Game(Scene):
         self.player_sprites = pygame.sprite.RenderUpdates(self.player)
         self.item_sprites = pygame.sprite.RenderUpdates(self.mana)
         self.mobs_sprites = pygame.sprite.RenderUpdates(self.enemy)
-        self.weapons_sprites = pygame.sprite.RenderUpdates(self.weapon)
         self.all_sprites = pygame.sprite.OrderedUpdates(
             self.score,
             self.mana,

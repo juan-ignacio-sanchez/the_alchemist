@@ -394,6 +394,8 @@ class Weapon(Sprite):
         self.surface = surface
         self.original_image = image
         self.owner = owner
+        self.sound = pygame.mixer.Sound(Path("assets/sounds/sfx/sword_brandishing.wav"))
+        self.sound.set_volume(settings.VOLUME)
 
         weapon_rect = pygame.Rect(BASIC_SWORD)
         self.image = self.original_image.subsurface(weapon_rect)
@@ -430,5 +432,6 @@ class Weapon(Sprite):
             self.kill()
 
     def on_key_pressed(self, event_key, keys):
-        if keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE] and self.brandishing == Weapon.STATIC:
             self.brandishing = Weapon.DOWN
+            self.sound.play()
