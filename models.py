@@ -59,7 +59,7 @@ class Item(Sprite):
 
 class Walker(Sprite):
     def __init__(self, surface: pygame.Surface, image: pygame.Surface, skin='OLD_MAN', facing=FACING_EAST,
-                 initial_position=(0, 0)):
+                 initial_position=(50, 50)):
         super().__init__()
         self.surface = surface
 
@@ -114,12 +114,12 @@ class Walker(Sprite):
             self.velocity.x *= -1 * FRICTION
             self.knock.play()
 
-        if not 0 < self.center_position.y:
-            self.center_position.y = 0
+        if not 70 < self.center_position.y:
+            self.center_position.y = 70
             self.velocity.y *= -1 * FRICTION
             self.knock.play()
-        elif not self.center_position.y < self.surface.get_height():
-            self.center_position.y = self.surface.get_height()
+        elif not self.center_position.y < self.surface.get_height() - 20:
+            self.center_position.y = self.surface.get_height() - 20
             self.velocity.y *= -1 * FRICTION
             self.knock.play()
 
@@ -303,7 +303,7 @@ class PlayerWonBanner(Sprite):
         super().__init__()
         self.main_text = "You Win!"
         self.screen = screen
-        self.main_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 52)
+        self.main_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 72)
         self.main_fnt.pad = True
 
     def update(self, *args, **kwargs):

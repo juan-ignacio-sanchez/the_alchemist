@@ -1,6 +1,6 @@
 from time import time
 from pathlib import Path
-from random import choice
+from random import choice, randint
 
 import pygame
 import pygame.freetype
@@ -23,6 +23,9 @@ from constants import (
     PLAYER_KILLED_SFX,
     ENDING_SOUND,
     MOBS_DICT,
+    FLOOR_BACKGROUND,
+    WALL_BACKGROUND,
+    WALL_FRONT_BACKGROUND,
 
 )
 from transformations import greyscale, blur
@@ -65,13 +68,13 @@ class Game(Scene):
         # Sprites
         self.score = Score(self.screen, max_score=25)
         # Player
-        self.player = Player(self.screen, self.sprites_image, initial_position=(50, 50))
+        self.player = Player(self.screen, self.sprites_image, initial_position=(70, self.screen.get_rect().height - 70))
         self.player.velocity = Vector2(0, 0)
 
         # Enemy
         self.enemy = Enemy(self.screen, self.sprites_image,
                       skin='BLOOD_CRYING_MOB', facing=FACING_WEST,
-                      initial_position=(self.screen.get_width(), 0))
+                      initial_position=(self.screen.get_width(), 60))
         self.enemy.velocity = Vector2(-.5, .5)
 
         # Items
@@ -84,10 +87,36 @@ class Game(Scene):
         self.screen.blit(self.background, (0, 0, *self.display_size))
 
     def _create_background(self) -> pygame.Surface:
-        return pygame.transform.scale(
-            self.sprites_image.subsurface(pygame.rect.Rect(0, 91, 64, 48)),
+        floor_surface = pygame.transform.scale(
+            self.sprites_image.subsurface(pygame.rect.Rect(FLOOR_BACKGROUND)),
             (self.screen.get_rect().width, self.screen.get_rect().height)
         )
+        steps = 4
+        walls = []
+        original_wall_up_height = self.sprites_image.subsurface(WALL_BACKGROUND).get_rect().height
+        new_wall_up_height = self.screen.get_rect().height // 5
+        original_wall_down_height = self.sprites_image.subsurface(WALL_FRONT_BACKGROUND).get_rect().height
+        new_wall_down_height = (original_wall_down_height * new_wall_up_height) // original_wall_up_height
+        for i in range(steps):
+            wall_surface_up = pygame.transform.scale(
+                self.sprites_image.subsurface(WALL_BACKGROUND),
+                (self.screen.get_rect().width // steps, new_wall_up_height)
+            )
+            rect = wall_surface_up.get_rect()
+            rect.x += i * rect.width
+            walls.append((wall_surface_up, rect))
+
+            wall_surface_down = pygame.transform.scale(
+                self.sprites_image.subsurface(WALL_FRONT_BACKGROUND),
+                (self.screen.get_rect().width // steps, new_wall_down_height)
+            )
+            rect = wall_surface_up.get_rect()
+            rect.x += i * rect.width
+            rect.y = self.screen.get_rect().height - new_wall_down_height
+            walls.append((wall_surface_down, rect))
+
+        floor_surface.blits(walls)
+        return floor_surface
 
     def _update_display(self):
         self.all_sprites.clear(self.screen, self.background)
@@ -208,7 +237,8 @@ class Game(Scene):
                         if bottle.color == Item.RED:
                             extra_enemy = Enemy(self.screen, self.sprites_image,
                                                skin=choice(list(MOBS_DICT)), facing=FACING_WEST,
-                                               initial_position=(self.screen.get_width(), 0))
+                                               initial_position=self.player.center_position + self.player.velocity * -70)
+
                             extra_enemy.velocity = Vector2(-.5, .5)
                             self.mobs_sprites.add(extra_enemy)
                             self.all_sprites.add(extra_enemy)

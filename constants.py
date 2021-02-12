@@ -52,6 +52,11 @@ WIDE_BLUE_LIQUID_ITEM = (196, 212, 9, 11)
 # Weapons
 BASIC_SWORD = (179, 10, 10, 21)
 
+# Bagrounds
+FLOOR_BACKGROUND = (0, 91, 64, 48)
+WALL_BACKGROUND = (1, 12, 46, 25)
+WALL_FRONT_BACKGROUND = (1, 12, 46, 7)
+
 # Sound
 BACKGROUND_SOUND = "./assets/sounds/background/Guitar-Mayhem-6" + settings.AUDIO_EXTENSION
 ENDING_SOUND = "assets/sounds/ending" + settings.AUDIO_EXTENSION
