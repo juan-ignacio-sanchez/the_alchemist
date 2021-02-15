@@ -1,16 +1,18 @@
 from time import time
 from pathlib import Path
-from random import choice, randint
+from random import choice
 
 import pygame
 import pygame.freetype
 from pygame.math import Vector2
 
-from models import (
+from sprites.models import (
     Item,
     Player,
     Enemy,
     Weapon,
+)
+from sprites.ui import (
     Score,
     PauseBanner,
     PlayerKilledBanner,
