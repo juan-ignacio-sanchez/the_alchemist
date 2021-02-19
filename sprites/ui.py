@@ -7,7 +7,13 @@ import pygame.freetype
 from pygame.sprite import Sprite
 
 import settings
-from constants import MENU_ITEM_CHANGED_SFX
+from constants import (
+    MENU_ITEM_CHANGED_SFX,
+    UI_BOX_TEXT_COLOR_PAPYRUS,
+)
+from .images import (
+    build_frame
+)
 
 
 class Score(Sprite):
@@ -18,6 +24,7 @@ class Score(Sprite):
         # upper left corner with a font size of 64
         # the number 200 for the width is arbitrary
         self.fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 32)  # FIXME: adjust size
+        self.fnt.pad = True
         self.value = 0
         self.max_score = max_score
         self.win_timestamp = None
@@ -45,8 +52,9 @@ class Score(Sprite):
             self.win_timestamp = time.time()
 
     def update(self, *args, **kwargs) -> None:
-        self.image, self.rect = self.fnt.render(f"Potions left: {self.max_score - self.value}", pygame.color.Color("white"))
-        self.rect.center = [(self.rect.width / 2) + 5, (self.rect.height / 2) + 5]
+        score_surface, score_rect = self.fnt.render(f"Potions left: {self.max_score - self.value}", pygame.color.Color(UI_BOX_TEXT_COLOR_PAPYRUS))
+        score_rect.center = [(score_rect.width / 2) + 5, (score_rect.height / 2) + 5]
+        self.image, self.rect = build_frame(score_surface, score_rect)
 
 
 class Option(Sprite):

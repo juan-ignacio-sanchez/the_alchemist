@@ -211,7 +211,7 @@ class Weapon(Sprite):
         FACING = 1 if self.owner.facing == FACING_EAST else -1
         if self.brandishing == Weapon.DOWN:
             self.sword_angle += self.angle_diff
-            if self.sword_angle >= 90:
+            if self.sword_angle >= 170:
                 self.brandishing = Weapon.UP
         elif self.brandishing == Weapon.UP and self.sword_angle > 0:
             self.sword_angle -= self.angle_diff
