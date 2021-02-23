@@ -13,44 +13,74 @@ def load_sprites_ui():
     return pygame.image.load(Path("./assets/sprites/sprites_ui.png")).convert_alpha()
 
 
-@lru_cache()
-def ui_left_top_corner():
-    return load_sprites_ui().subsurface(constants.UI_BOX_CORNER_UP_LEFT)
+def ui_corner_scale(surface: pygame.Surface, scale_factor: int) -> Tuple[pygame.Surface, pygame.Rect]:
+    surface = pygame.transform.scale(
+        surface,
+        [scale_factor * x for x in surface.get_size()]
+    )
+    return surface, surface.get_rect()
 
 
 @lru_cache()
-def ui_right_top_corner():
-    return load_sprites_ui().subsurface(constants.UI_BOX_CORNER_UP_RIGHT)
+def ui_corner_top_left(scale_factor: int):
+    return ui_corner_scale(load_sprites_ui().subsurface(constants.UI_BOX_CORNER_TOP_LEFT), scale_factor)
 
 
 @lru_cache()
-def ui_right_bottom_corner():
-    return load_sprites_ui().subsurface(constants.UI_BOX_CORNER_BOTTOM_RIGHT)
+def ui_corner_bottom_left(scale_factor):
+    return ui_corner_scale(load_sprites_ui().subsurface(constants.UI_BOX_CORNER_BOTTOM_LEFT), scale_factor)
 
 
 @lru_cache()
-def ui_top_bar():
-    return load_sprites_ui().subsurface(constants.UI_BOX_TOP_HORIZONTAL_BAR)
+def ui_corner_top_right(scale_factor):
+    return ui_corner_scale(load_sprites_ui().subsurface(constants.UI_BOX_CORNER_TOP_RIGHT), scale_factor)
 
 
 @lru_cache()
-def ui_bottom_bar():
-    return load_sprites_ui().subsurface(constants.UI_BOX_BOTTOM_HORIZONTAL_BAR)
+def ui_corner_bottom_right(scale_factor):
+    return ui_corner_scale(load_sprites_ui().subsurface(constants.UI_BOX_CORNER_BOTTOM_RIGHT), scale_factor)
+
+
+def ui_horizontal_bar_scale(surface, width, scale_factor):
+    surface = pygame.transform.scale(
+        surface,
+        (
+            width,
+            surface.get_height() * scale_factor
+        )
+    )
+    return surface, surface.get_rect()
 
 
 @lru_cache()
-def ui_left_bottom_corner():
-    return load_sprites_ui().subsurface(constants.UI_BOX_CORNER_BOTTOM_LEFT)
+def ui_bar_top(width, scale_factor):
+    return ui_horizontal_bar_scale(load_sprites_ui().subsurface(constants.UI_BOX_TOP_HORIZONTAL_BAR), width, scale_factor)
 
 
 @lru_cache()
-def ui_left_vertical_bar():
-    return load_sprites_ui().subsurface(constants.UI_BOX_VERTICAL_BAR_LEFT)
+def ui_bar_bottom(width, scale_factor):
+    return ui_horizontal_bar_scale(load_sprites_ui().subsurface(constants.UI_BOX_BOTTOM_HORIZONTAL_BAR), width, scale_factor)
+
+
+def ui_vertical_bar_scale(surface, height, scale_factor):
+    surface = pygame.transform.scale(
+        surface,
+        (
+            surface.get_width() * scale_factor,
+            height,
+        )
+    )
+    return surface, surface.get_rect()
 
 
 @lru_cache()
-def ui_right_vertical_bar():
-    return load_sprites_ui().subsurface(constants.UI_BOX_VERTICAL_BAR_RIGHT)
+def ui_vertical_bar_left(height, scale_factor):
+    return ui_vertical_bar_scale(load_sprites_ui().subsurface(constants.UI_BOX_VERTICAL_BAR_LEFT), height, scale_factor)
+
+
+@lru_cache()
+def ui_vertical_bar_right(height, scale_factor):
+    return ui_vertical_bar_scale(load_sprites_ui().subsurface(constants.UI_BOX_VERTICAL_BAR_RIGHT), height, scale_factor)
 
 
 @lru_cache()
@@ -58,84 +88,55 @@ def ui_box_background():
     return load_sprites_ui().subsurface(constants.UI_BOX_BACKGROUND)
 
 
-def build_frame(surface: pygame.Surface, rect: pygame.Rect,
-                scale_factor: int = constants.ITEMS_SCALE_FACTOR,
+def build_frame(content_surface: pygame.Surface, rect: pygame.Rect,
+                scale_factor: int = constants.UI_SCALE_FACTOR,
                 padding: int = 10) -> Tuple[pygame.Surface, pygame.Rect]:
-    """Given a surface, rect, and a scale factor, build a decorative frame on it."""
+    """
+    Given a surface, rect, and a scale factor, build a decorative frame on it.
+    """
     content_width, content_height = rect.size
     # Pieces
-    left_up_corner_surface = pygame.transform.scale(
-        ui_left_top_corner(),
-        [scale_factor * x for x in ui_left_top_corner().get_rect()[2:]]
-    )
-    left_up_corner_rect = left_up_corner_surface.get_rect()
-    total_padding = padding + left_up_corner_rect.width
+    corner_top_left_surface, corner_top_left_rect = ui_corner_top_left(scale_factor)
     container_surface = pygame.Surface(
         (
-            2 * (left_up_corner_rect.width + padding) + content_width,
-            2 * (left_up_corner_rect.height + padding) + content_height
+            2 * (corner_top_left_rect.width + padding) + content_width,
+            2 * (corner_top_left_rect.height + padding) + content_height
         ),
         flags=pygame.SRCALPHA
     )
-    container_width, container_height = container_surface.get_size()
+    container_rect = container_surface.get_rect()
 
-    top_bar_surface = pygame.transform.scale(
-        ui_top_bar(),
-        (
-            container_surface.get_width() - left_up_corner_rect.width * 2,
-            ui_top_bar().get_height() * scale_factor
-        )
-    )
-    bottom_bar_surface = pygame.transform.scale(
-        ui_bottom_bar(),
-        (
-            container_surface.get_width() - left_up_corner_rect.width * 2,
-            ui_bottom_bar().get_height() * scale_factor
-        )
-    )
-    bottom_left_corner_surface = pygame.transform.scale(
-        ui_left_bottom_corner(),
-        [scale_factor * x for x in ui_left_bottom_corner().get_rect()[2:]]
-    )
-    bottom_right_corner_surface = pygame.transform.scale(
-        ui_right_bottom_corner(),
-        [scale_factor * x for x in ui_right_bottom_corner().get_rect()[2:]]
-    )
-    top_right_corner_surface = pygame.transform.scale(
-        ui_right_top_corner(),
-        [scale_factor * x for x in ui_right_top_corner().get_rect()[2:]]
-    )
-    vertical_left_surface = pygame.transform.scale(
-        ui_left_vertical_bar(),
-        (
-            ui_left_vertical_bar().get_width() * scale_factor,
-            container_surface.get_height() - bottom_left_corner_surface.get_height() - left_up_corner_rect.height
-        )
-    )
-    vertical_right_surface = pygame.transform.scale(
-        ui_right_vertical_bar(),
-        (
-            ui_right_vertical_bar().get_width() * scale_factor,
-            container_surface.get_height() - bottom_left_corner_surface.get_height() - left_up_corner_rect.height
-        )
-    )
+    corner_bottom_left_surface, corner_bottom_left_rect = ui_corner_bottom_left(scale_factor)
+    corner_bottom_right_surface, corner_bottom_right_rect = ui_corner_bottom_right(scale_factor)
+    corner_top_right_surface, corner_top_right_rect = ui_corner_top_right(scale_factor)
+
+    horizontal_bar_width = container_rect.width - corner_top_left_rect.width * 2
+    vertical_bar_height = container_rect.height - corner_bottom_left_rect.height - corner_top_left_rect.height
+
+    bar_top_surface, bar_top_rect = ui_bar_top(horizontal_bar_width, scale_factor)
+    bar_bottom_surface, bar_bottom_rect = ui_bar_bottom(horizontal_bar_width, scale_factor)
+    bar_left_surface, bar_left_rect = ui_vertical_bar_left(vertical_bar_height, scale_factor)
+    bar_right_surface, bar_right_rect = ui_vertical_bar_right(vertical_bar_height, scale_factor)
 
     background = pygame.Surface((
-        container_width - vertical_right_surface.get_width() * 2,
-        container_height - top_bar_surface.get_height() - bottom_bar_surface.get_height()
+        container_rect.width - bar_right_rect.width * 2,
+        container_rect.height - bar_top_rect.height - bar_bottom_rect.height
     ))
     background.fill(constants.UI_BOX_BACKGROUND_COLOR_PAPYRUS)
 
     container_surface.blits([
-        (background, (vertical_left_surface.get_rect().right, top_bar_surface.get_rect().bottom)),
-        (left_up_corner_surface, (0, 0)),
-        (top_bar_surface, (left_up_corner_rect.right, left_up_corner_rect.top)),
-        (vertical_left_surface, (0, left_up_corner_rect.bottom)),
-        (vertical_right_surface, (container_surface.get_rect().right - vertical_right_surface.get_rect().width, left_up_corner_rect.bottom)),
-        (bottom_left_corner_surface, (0, container_surface.get_rect().bottom - bottom_left_corner_surface.get_height())),
-        (bottom_right_corner_surface, (container_surface.get_rect().right - bottom_right_corner_surface.get_width(), container_surface.get_rect().bottom - bottom_right_corner_surface.get_height())),
-        (top_right_corner_surface, (container_surface.get_rect().right - top_right_corner_surface.get_width(), 0)),
-        (bottom_bar_surface, (left_up_corner_rect.right, container_surface.get_rect().bottom - bottom_bar_surface.get_height())),
-        (surface, Vector2(container_surface.get_rect().center) - Vector2(surface.get_size())/2),
+        (background, (bar_left_rect.right, bar_top_rect.bottom)),
+        (corner_top_left_surface, (0, 0)),
+        (corner_top_right_surface, (container_rect.right - corner_top_right_rect.width, 0)),
+        (corner_bottom_left_surface, (0, container_rect.bottom - corner_bottom_left_rect.height)),
+        (corner_bottom_right_surface, (
+            container_rect.right - corner_bottom_right_rect.width,
+            container_rect.bottom - corner_bottom_right_rect.height
+        )),
+        (bar_top_surface, (corner_top_left_rect.right, corner_top_left_rect.top)),
+        (bar_bottom_surface, (corner_top_left_rect.right, container_rect.bottom - bar_bottom_rect.height)),
+        (bar_left_surface, (0, corner_top_left_rect.bottom)),
+        (bar_right_surface, (container_rect.right - bar_right_rect.width, corner_top_left_rect.bottom)),
+        (content_surface, Vector2(container_rect.center) - Vector2(content_surface.get_size()) / 2),
     ])
     return container_surface, container_surface.get_rect()

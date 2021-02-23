@@ -80,6 +80,7 @@ class Walker(Sprite):
         # Sound
         self.knock = pygame.mixer.Sound(Path(WALL_HIT_SFX))
         self.knock.set_volume(settings.SFX_VOLUME)
+        self._image = None
 
     def restore_initial_position(self):
         self.velocity.update(0, 0)
