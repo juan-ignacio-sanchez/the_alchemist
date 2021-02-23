@@ -75,6 +75,9 @@ UI_BOX_BACKGROUND = (80, 104, 24, 24)
 UI_BOX_BACKGROUND_COLOR_PAPYRUS = (211, 191, 169)
 UI_BOX_TEXT_COLOR_PAPYRUS = (71, 58, 57)
 
+# Sprites
+SPRITES_UI_PATH = "./assets/sprites/sprites_ui.png"
+
 # Sound
 BACKGROUND_SOUND = "./assets/sounds/background/Guitar-Mayhem-6" + settings.AUDIO_EXTENSION
 ENDING_SOUND = "assets/sounds/ending" + settings.AUDIO_EXTENSION

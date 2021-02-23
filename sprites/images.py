@@ -10,7 +10,7 @@ import constants
 
 @lru_cache()
 def load_sprites_ui():
-    return pygame.image.load(Path("./assets/sprites/sprites_ui.png")).convert_alpha()
+    return pygame.image.load(Path(constants.SPRITES_UI_PATH)).convert_alpha()
 
 
 def ui_corner_scale(surface: pygame.Surface, scale_factor: int) -> Tuple[pygame.Surface, pygame.Rect]:
