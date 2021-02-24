@@ -9,7 +9,7 @@ import pygame.freetype
 import settings
 from constants import MAIN_MENU_SOUND
 from scenes import Game, CreditsScene, ControlsScene
-from models import MainMenu
+from sprites.ui import MainMenu
 from transformations import greyscale
 
 Size = namedtuple('Size', ['width', 'height'])
