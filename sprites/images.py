@@ -8,7 +8,7 @@ from pygame.math import Vector2
 import constants
 
 
-@lru_cache()
+@lru_cache(maxsize=1)
 def load_sprites_ui():
     return pygame.image.load(Path(constants.SPRITES_UI_PATH)).convert_alpha()
 

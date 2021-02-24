@@ -1,6 +1,7 @@
 import time
 import random
 from pathlib import Path
+from math import atan
 
 import pygame
 import pygame.freetype
@@ -136,8 +137,10 @@ class Enemy(Walker):
 
     def update(self, *args, **kwargs) -> None:
         # Follow the player
-        distance_vector = (kwargs.get('player_position') - self.center_position).normalize()
-        self.apply_force(distance_vector * 2 / self.rect.height)
+        distance_vector = kwargs.get('player_position') - self.center_position
+        distance_vector_magnitude = distance_vector.magnitude()
+        distance_vector_normalized = distance_vector.normalize()
+        self.apply_force(distance_vector_normalized * atan(distance_vector_magnitude / self.rect.height / 3 / 6)**3)
         self.move()
         self.bounce()
         self.change_facing()
@@ -164,7 +167,7 @@ class Player(Walker):
             self.image = pygame.transform.flip(self.image, True, False)
 
     def on_key_pressed(self, event_key, keys):
-        magnitude = .5
+        magnitude = .7
         if keys[pygame.K_RIGHT]:
             self.apply_force(Vector2(magnitude, 0))
         if keys[pygame.K_LEFT]:

@@ -70,7 +70,7 @@ class Game(Scene):
         self.ending_sound.set_volume(settings.VOLUME)
 
         # Sprites
-        self.score = Score(self.screen, max_score=25)
+        self.score = Score(self.screen, max_score=26, seconds_to_leave=5)
         # Player
         self.player = Player(self.screen, self.sprites_image, initial_position=(70, self.screen.get_rect().height - 70))
         self.player.velocity = Vector2(0, 0)
@@ -196,6 +196,12 @@ class Game(Scene):
                     elif not self.paused:
                         self.player.on_key_pressed(event.key, pygame.key.get_pressed())
                         self.weapon.on_key_pressed(event.key, pygame.key.get_pressed())
+
+            # I want this collision to always be computed.
+            if pygame.sprite.collide_rect(self.player, self.score):
+                self.score.hide()
+            else:
+                self.score.show()
 
             if self.score.won():
                 if not self.all_sprites.has(self.player_won_banner):

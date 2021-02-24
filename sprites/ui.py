@@ -10,6 +10,7 @@ import settings
 from constants import (
     MENU_ITEM_CHANGED_SFX,
     UI_BOX_TEXT_COLOR_PAPYRUS,
+    UI_BOX_BACKGROUND_COLOR_PAPYRUS,
 )
 from .images import (
     build_frame
@@ -30,6 +31,8 @@ class Score(Sprite):
         self.win_timestamp = None
         self.seconds_to_leave = seconds_to_leave
         self.transition_seconds = 1
+        self.hidden = False
+        self.image, self.rect = self.render_surface()
 
     def quit_transition(self):
         if self.win_timestamp:
@@ -46,15 +49,26 @@ class Score(Sprite):
     def won(self):
         return self.value == self.max_score
 
+    def hide(self):
+        self.hidden = True
+
+    def show(self):
+        self.hidden = False
+
     def increase(self, amount=1):
         self.value += 1
         if self.value == self.max_score:
             self.win_timestamp = time.time()
 
-    def update(self, *args, **kwargs) -> None:
+    def render_surface(self):
         score_surface, score_rect = self.fnt.render(f"Potions left: {self.max_score - self.value}", pygame.color.Color(UI_BOX_TEXT_COLOR_PAPYRUS))
         score_rect.center = [(score_rect.width / 2) + 5, (score_rect.height / 2) + 5]
-        self.image, self.rect = build_frame(score_surface, score_rect)
+        return build_frame(score_surface, score_rect)
+
+    def update(self, *args, **kwargs) -> None:
+        self.image, self.rect = self.render_surface()
+        if self.hidden:
+            self.image.set_alpha(50)
 
 
 class Option(Sprite):
@@ -139,23 +153,33 @@ class MainMenu(Sprite):
 class PlayerWonBanner(Sprite):
     def __init__(self, screen: pygame.Surface):
         super().__init__()
-        self.main_text = "You Win!"
+        self.main_text = "Home's safe for now..."
+        self.secondary_text = "...but alchemy is tricky. Prepare yourself."
         self.screen = screen
-        self.main_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 72)
+        self.main_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 52)
         self.main_fnt.pad = True
+        self.secondary_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 22)
 
     def update(self, *args, **kwargs):
-        main_surface, _ = self.main_fnt.render(text=self.main_text, fgcolor=pygame.color.Color("white"))
+        main_surface, _ = self.main_fnt.render(text=self.main_text, fgcolor=pygame.color.Color(UI_BOX_BACKGROUND_COLOR_PAPYRUS))
         main_rect = main_surface.get_rect()
 
-        self.image = pygame.surface.Surface(main_rect.size, flags=pygame.SRCALPHA)
+        secondary_surface, _ = self.secondary_fnt.render(text=self.secondary_text, fgcolor=pygame.color.Color(UI_BOX_BACKGROUND_COLOR_PAPYRUS))
+        secondary_rect = main_rect.copy()
+        secondary_rect.y += secondary_rect.height
+
+        self.image = pygame.surface.Surface(main_rect.union(secondary_rect).size, flags=pygame.SRCALPHA)
 
         main_rect.centerx = self.image.get_rect().centerx
+        secondary_rect.centerx = main_rect.centerx
 
         self.image.blits([
             (main_surface, main_rect),
+            (secondary_surface, secondary_rect),
         ])
         self.rect = self.image.get_rect()
+
+        # self.image, self.rect = build_frame(self.image, self.rect)
         self.rect.center = self.screen.get_rect().center
 
 
@@ -170,10 +194,10 @@ class PlayerKilledBanner(Sprite):
         self.main_fnt.pad = self.secondary_fnt.pad = True
 
     def update(self, *args, **kwargs):
-        main_surface, _ = self.main_fnt.render(text=self.main_text, fgcolor=pygame.color.Color("white"))
+        main_surface, _ = self.main_fnt.render(text=self.main_text, fgcolor=pygame.color.Color(UI_BOX_BACKGROUND_COLOR_PAPYRUS))
         main_rect = main_surface.get_rect()
 
-        secondary_surface, _ = self.secondary_fnt.render(text=self.secondary_text, fgcolor=pygame.color.Color("white"))
+        secondary_surface, _ = self.secondary_fnt.render(text=self.secondary_text, fgcolor=pygame.color.Color(UI_BOX_BACKGROUND_COLOR_PAPYRUS))
         secondary_rect = main_surface.get_rect()
         secondary_rect.y += main_rect.height
 
@@ -203,10 +227,10 @@ class PauseBanner(Sprite):
         self.output_rect = None
 
     def render(self, *args, **kwargs):
-        paused_surface, _ = self.paused_fnt.render(text=self.paused_text, fgcolor=pygame.color.Color("white"))
+        paused_surface, _ = self.paused_fnt.render(text=self.paused_text, fgcolor=pygame.color.Color(UI_BOX_BACKGROUND_COLOR_PAPYRUS))
         paused_rect = paused_surface.get_rect()
 
-        helper_surface, _ = self.helper_fnt.render(text=self.helper_text, fgcolor=pygame.color.Color("white"))
+        helper_surface, _ = self.helper_fnt.render(text=self.helper_text, fgcolor=pygame.color.Color(UI_BOX_BACKGROUND_COLOR_PAPYRUS))
         helper_rect = helper_surface.get_rect()
         helper_rect.y += paused_rect.height
 
