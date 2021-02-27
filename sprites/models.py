@@ -98,6 +98,11 @@ class Walker(Sprite):
     def apply_gravity(self):
         self.apply_force(Vector2(0, .002))
 
+    def apply_friction(self):
+        if self.velocity.magnitude():
+            friction_force = self.velocity.normalize() * -0.01
+            self.apply_force(friction_force)
+
     def move(self):
         self.velocity += self.acceleration
         self.center_position += self.velocity
@@ -182,6 +187,10 @@ class Player(Walker):
     def update(self, *args, **kwargs) -> None:
         self.move()
         self.bounce()
+
+    def move(self):
+        super().move()
+        self.apply_friction()
 
 
 class Weapon(Sprite):
