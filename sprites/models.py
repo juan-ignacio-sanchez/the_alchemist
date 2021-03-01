@@ -1,7 +1,7 @@
 import time
 import random
 from pathlib import Path
-from math import atan
+from math import atan, copysign
 
 import pygame
 import pygame.freetype
@@ -140,12 +140,32 @@ class Enemy(Walker):
             self.facing = FACING_WEST
             self.image = pygame.transform.flip(self.image, True, False)
 
+    def limit_vector(self, vector, bottom, top):
+        mag = vector.magnitude()
+        if mag > top:
+            force = vector.normalize() * top
+        elif mag < bottom:
+            force = vector.normalize() * bottom
+        else:
+            force = vector
+        return force
+
+    @staticmethod
+    def different_quadrants(v: pygame.Vector2, w: pygame.Vector2) -> bool:
+        return v.x != copysign(v.x, w.x) or v.y != copysign(v.y, w.y)
+
     def update(self, *args, **kwargs) -> None:
+        player_position = Vector2(kwargs.get('player_position'))
         # Follow the player
-        distance_vector = kwargs.get('player_position') - self.center_position
-        distance_vector_magnitude = distance_vector.magnitude()
-        distance_vector_normalized = distance_vector.normalize()
-        self.apply_force(distance_vector_normalized * atan(distance_vector_magnitude / self.rect.height / 3 / 6)**3)
+        distance_vector = Vector2(player_position - self.center_position)
+        distance_vector.scale_to_length(distance_vector.magnitude())
+        force = self.limit_vector(distance_vector, .005, 0.1)
+
+        # Extra force if going in "opposite" directions
+        if Enemy.different_quadrants(self.velocity, player_position):
+            force *= 3
+
+        self.apply_force(force)
         self.move()
         self.bounce()
         self.change_facing()
