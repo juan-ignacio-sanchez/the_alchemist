@@ -9,11 +9,20 @@ python -m compileall .
 # Move some files that will be needed during the instalation on the target.
 cp -r ./assets README.md Makefile Pipfile* ./__pycache__
 
+# Copy sprites' bytcode files to the root's __pycache__ folder.
+# And rename it to "sprites"
+cp -r sprites/__pycache__/ __pycache__/sprites
+
 # Move into the compiled files directory
 cd ./__pycache__
 
 # Removing the .cpython-39 substring from compiled files.
 for path in $(ls *.cpython-39.pyc)
+do
+  mv $path $(echo $path | sed 's/.cpython-39//g')
+done
+
+for path in $(ls sprites/*.cpython-39.pyc)
 do
   mv $path $(echo $path | sed 's/.cpython-39//g')
 done
