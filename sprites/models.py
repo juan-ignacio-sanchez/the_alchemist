@@ -1,7 +1,8 @@
 import time
 import random
 from pathlib import Path
-from math import atan
+from math import copysign
+from typing import Tuple
 
 import pygame
 import pygame.freetype
@@ -18,7 +19,7 @@ from constants import (
     WIDE_BLUE_LIQUID_ITEM,
     WIDE_RED_LIQUID_ITEM,
     WALL_HIT_SFX,
-    MENU_ITEM_CHANGED_SFX,
+    ENEMY_KILLED_SFX,
     BASIC_SWORD,
     SCALE_FACTOR,
     ITEMS_SCALE_FACTOR,
@@ -43,7 +44,7 @@ class Item(Sprite):
         self.rect.center = initial_position
 
     def spawn(self, position=None, color=None):
-        if not color:
+        if color is None:
             self.color = random.choice(range(len(Item.BOTTLE_COLORS)))
         else:
             self.color = color
@@ -56,6 +57,49 @@ class Item(Sprite):
             random.randint(100, self.surface.get_height() - 100)
         )
 
+
+class Particle(Sprite):
+    def __init__(self, surface: pygame.Surface, image: pygame.Surface, initial_position: Tuple = (50, 50),
+                 reference_force_vector: Vector2 = None):
+        super().__init__()
+        self.surface = surface
+
+        self.image = image
+
+        self.initial_position = initial_position
+        self.rect = self.image.get_rect()
+        self.rect.center = initial_position
+
+        self.center_position = Vector2(self.rect.center)
+        self.velocity = Vector2(0, 0)
+        self.acceleration = Vector2(0, 0)
+
+        angle = random.randint(-45, 45)
+        magnitude = random.randint(1, 45) / 100
+        self.apply_force(reference_force_vector.rotate(angle) * magnitude)
+
+    def apply_force(self, force: Vector2):
+        self.acceleration += force
+
+    def apply_gravity(self):
+        self.apply_force(Vector2(0, .2))
+
+    def apply_friction(self):
+        if self.velocity.magnitude():
+            friction_force = self.velocity.normalize() * -0.01
+            self.apply_force(friction_force)
+
+    def move(self):
+        self.velocity += self.acceleration
+        self.center_position += self.velocity
+        self.rect.center = self.center_position
+        self.acceleration.update(0, 0)
+        self.apply_gravity()
+
+    def update(self, *args, **kwargs) -> None:
+        self.move()
+        if not self.surface.get_rect().contains(self.rect):
+            self.kill()
 
 class Walker(Sprite):
     def __init__(self, surface: pygame.Surface, image: pygame.Surface, skin='OLD_MAN', facing=FACING_EAST,
@@ -81,7 +125,6 @@ class Walker(Sprite):
         # Sound
         self.knock = pygame.mixer.Sound(Path(WALL_HIT_SFX))
         self.knock.set_volume(settings.SFX_VOLUME)
-        self._image = None
 
     def restore_initial_position(self):
         self.velocity.update(0, 0)
@@ -97,6 +140,11 @@ class Walker(Sprite):
 
     def apply_gravity(self):
         self.apply_force(Vector2(0, .002))
+
+    def apply_friction(self):
+        if self.velocity.magnitude():
+            friction_force = self.velocity.normalize() * -0.01
+            self.apply_force(friction_force)
 
     def move(self):
         self.velocity += self.acceleration
@@ -127,6 +175,11 @@ class Walker(Sprite):
 
 
 class Enemy(Walker):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.banishing_sound = pygame.mixer.Sound(Path(ENEMY_KILLED_SFX))
+        self.banishing_sound.set_volume(settings.SFX_VOLUME)
+
     def change_facing(self):
         if self.velocity.x > 0 and not self.facing == FACING_EAST:
             self.facing = FACING_EAST
@@ -135,12 +188,55 @@ class Enemy(Walker):
             self.facing = FACING_WEST
             self.image = pygame.transform.flip(self.image, True, False)
 
+    def limit_vector(self, vector, bottom, top):
+        mag = vector.magnitude()
+        if mag > top:
+            force = vector.normalize() * top
+        elif mag < bottom:
+            force = vector.normalize() * bottom
+        else:
+            force = vector
+        return force
+
+    @staticmethod
+    def different_quadrants(v: pygame.Vector2, w: pygame.Vector2) -> bool:
+        return v.x != copysign(v.x, w.x) or v.y != copysign(v.y, w.y)
+
+    def die(self, player_position: Vector2):
+        PIECE_SIZE = 10
+        self.kill()
+        self.banishing_sound.play()
+        # Slice squares the image apart.
+        x_slices = self.rect.width // PIECE_SIZE
+        y_slices = self.rect.height // PIECE_SIZE
+        height = PIECE_SIZE
+        width = PIECE_SIZE
+
+        for slice_x_position in range(x_slices):
+            vertical_offset = 0
+            for slice in range(y_slices):
+                subsurf = self.image.subsurface(slice_x_position * width, vertical_offset, width, height)
+                x, y, _, _ = subsurf.get_rect()
+                yield Particle(
+                    surface=self.surface,
+                    image=subsurf,
+                    initial_position=(self.rect.x + x, self.rect.y + y),
+                    reference_force_vector=self.center_position - player_position
+                )
+                vertical_offset += height
+
     def update(self, *args, **kwargs) -> None:
+        player_position = Vector2(kwargs.get('player_position'))
         # Follow the player
-        distance_vector = kwargs.get('player_position') - self.center_position
-        distance_vector_magnitude = distance_vector.magnitude()
-        distance_vector_normalized = distance_vector.normalize()
-        self.apply_force(distance_vector_normalized * atan(distance_vector_magnitude / self.rect.height / 3 / 6)**3)
+        distance_vector = Vector2(player_position - self.center_position)
+        distance_vector.scale_to_length(distance_vector.magnitude())
+        force = self.limit_vector(distance_vector, .005, 0.1)
+
+        # Extra force if going in "opposite" directions
+        if Enemy.different_quadrants(self.velocity, player_position):
+            force *= 3
+
+        self.apply_force(force)
         self.move()
         self.bounce()
         self.change_facing()
@@ -150,6 +246,7 @@ class Enemy(Walker):
         skin_rect = pygame.rect.Rect(MOBS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
         self.image = pygame.transform.scale(self.image, [side * SCALE_FACTOR for side in skin_rect.size])
+        self.rect = self.image.get_rect()
 
 
 class Player(Walker):
@@ -182,6 +279,10 @@ class Player(Walker):
     def update(self, *args, **kwargs) -> None:
         self.move()
         self.bounce()
+
+    def move(self):
+        super().move()
+        self.apply_friction()
 
 
 class Weapon(Sprite):

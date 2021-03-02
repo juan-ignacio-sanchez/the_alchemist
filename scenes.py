@@ -23,6 +23,7 @@ from constants import (
     BACKGROUND_SOUND,
     BOTTLE_PICKED_SFX,
     PLAYER_KILLED_SFX,
+    PLAYER_WIN_SFX,
     ENDING_SOUND,
     MOBS_DICT,
     FLOOR_BACKGROUND,
@@ -68,6 +69,8 @@ class Game(Scene):
         self.background_sound.set_volume(settings.VOLUME)
         self.ending_sound = pygame.mixer.Sound(Path(ENDING_SOUND))
         self.ending_sound.set_volume(settings.VOLUME)
+        self.player_won_sound = pygame.mixer.Sound(Path(PLAYER_WIN_SFX))
+        self.player_won_sound.set_volume(settings.SFX_VOLUME)
 
         # Sprites
         self.score = Score(self.screen, max_score=26, seconds_to_leave=5)
@@ -164,6 +167,7 @@ class Game(Scene):
         self.player_sprites = pygame.sprite.RenderUpdates(self.player)
         self.item_sprites = pygame.sprite.RenderUpdates(self.mana)
         self.mobs_sprites = pygame.sprite.RenderUpdates(self.enemy)
+        self.particles_sprites = pygame.sprite.RenderUpdates()
         self.all_sprites = pygame.sprite.OrderedUpdates(
             self.score,
             self.mana,
@@ -233,7 +237,8 @@ class Game(Scene):
                             enemy.acceleration.update(0.01, 0.01)
                     elif self.weapon.alive() and weapon_mobs_collide and self.weapon.brandishing != Weapon.STATIC:
                         for mob in weapon_mobs_collide:
-                            mob.kill()
+                            self.particles_sprites.add(*list(mob.die(self.player.center_position)))
+                            self.all_sprites.add(*self.particles_sprites)
                         self.weapon.kill()
 
                 bottles_picked = pygame.sprite.spritecollide(
@@ -258,6 +263,12 @@ class Game(Scene):
                             bottle.spawn()
                         else:
                             bottle.kill()
+                    if self.score.won():
+                        self.background_sound.fadeout(2000)
+                        self.player_won_sound.play(0, 0, 500)
+                        for mob in self.mobs_sprites:
+                            self.particles_sprites.add(*list(mob.die(self.player.center_position)))
+                            self.all_sprites.add(*self.particles_sprites)
                 # +++++++++++++++++++
                 self._update_display()
             self.main_clock.tick(60)
