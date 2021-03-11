@@ -139,7 +139,7 @@ class Walker(Sprite):
 
     def apply_friction(self):
         if self.velocity.magnitude():
-            friction_force = self.velocity.normalize() * -0.09
+            friction_force = self.velocity.normalize() * -0.1
             self.apply_force(friction_force)
 
     def move(self):
@@ -205,13 +205,11 @@ class Enemy(Walker):
 
     def hurt(self, player_position: Vector2, hearts: int = 1):
         if not self.being_repeled():
-            print(id(self), "was hurt")
             self.hearts -= 1
             self.apply_force(-self.velocity)
-            self.apply_force((self.center_position - player_position).normalize() * 10)
+            self.apply_force((self.center_position - player_position).normalize() * 15)
             self.last_hit = time.time_ns()
         if self.hearts <= 0:
-            print(id(self), "is dying")
             return self.die(player_position)
 
     def die(self, player_position: Vector2):
@@ -353,6 +351,6 @@ class Weapon(Sprite):
             self.kill()
 
     def on_key_pressed(self, event_key, keys):
-        if keys[pygame.K_SPACE] and self.brandishing == Weapon.STATIC:
+        if keys[pygame.K_SPACE] and self.alive() and self.brandishing == Weapon.STATIC:
             self.brandishing = Weapon.DOWN
             self.sound.play()
