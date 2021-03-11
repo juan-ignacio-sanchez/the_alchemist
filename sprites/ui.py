@@ -24,7 +24,7 @@ class Score(Sprite):
         self.surface = surface
         # upper left corner with a font size of 64
         # the number 200 for the width is arbitrary
-        self.fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 32)  # FIXME: adjust size
+        self.fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 12)  # FIXME: adjust size
         self.fnt.pad = True
         self.value = 0
         self.max_score = max_score

@@ -10,6 +10,7 @@ from pygame.sprite import Sprite
 from pygame.math import Vector2
 
 import settings
+from transformations import greyscale
 from constants import (
     FACING_WEST,
     FACING_EAST,
@@ -66,7 +67,8 @@ class Particle(Sprite):
 
         self.image = image
 
-        self.initial_position = initial_position
+        self.initial_position = Vector2(initial_position)
+        self.decay_distance = random.choice((*([random.randint(100, 200)] * 10), random.randint(250, 400)))
         self.rect = self.image.get_rect()
         self.rect.center = initial_position
 
@@ -74,31 +76,25 @@ class Particle(Sprite):
         self.velocity = Vector2(0, 0)
         self.acceleration = Vector2(0, 0)
 
-        angle = random.randint(-45, 45)
-        magnitude = random.randint(1, 45) / 100
-        self.apply_force(reference_force_vector.rotate(angle) * magnitude)
+        angle = random.randint(-15000, 15000)
+        magnitude = random.choice((*([random.randint(10, 100)] * 5), random.randint(100, 2500)))
+        magnitude /= 200_000
+        self.force_to_apply = reference_force_vector.rotate(angle / 1000) * magnitude
 
     def apply_force(self, force: Vector2):
         self.acceleration += force
-
-    def apply_gravity(self):
-        self.apply_force(Vector2(0, .2))
-
-    def apply_friction(self):
-        if self.velocity.magnitude():
-            friction_force = self.velocity.normalize() * -0.01
-            self.apply_force(friction_force)
 
     def move(self):
         self.velocity += self.acceleration
         self.center_position += self.velocity
         self.rect.center = self.center_position
         self.acceleration.update(0, 0)
-        self.apply_gravity()
 
     def update(self, *args, **kwargs) -> None:
+        self.apply_force(self.force_to_apply)
         self.move()
-        if not self.surface.get_rect().contains(self.rect):
+        if not self.surface.get_rect().contains(self.rect) or \
+            self.initial_position.distance_to(self.center_position) > self.decay_distance:
             self.kill()
 
 class Walker(Sprite):
@@ -143,7 +139,7 @@ class Walker(Sprite):
 
     def apply_friction(self):
         if self.velocity.magnitude():
-            friction_force = self.velocity.normalize() * -0.01
+            friction_force = self.velocity.normalize() * -0.09
             self.apply_force(friction_force)
 
     def move(self):
@@ -179,6 +175,8 @@ class Enemy(Walker):
         super().__init__(*args, **kwargs)
         self.banishing_sound = pygame.mixer.Sound(Path(ENEMY_KILLED_SFX))
         self.banishing_sound.set_volume(settings.SFX_VOLUME)
+        self.hearts = 3
+        self.last_hit = time.time()
 
     def change_facing(self):
         if self.velocity.x > 0 and not self.facing == FACING_EAST:
@@ -202,8 +200,22 @@ class Enemy(Walker):
     def different_quadrants(v: pygame.Vector2, w: pygame.Vector2) -> bool:
         return v.x != copysign(v.x, w.x) or v.y != copysign(v.y, w.y)
 
+    def being_repeled(self):
+        return (time.time_ns() - self.last_hit) <= 150_000_000
+
+    def hurt(self, player_position: Vector2, hearts: int = 1):
+        if not self.being_repeled():
+            print(id(self), "was hurt")
+            self.hearts -= 1
+            self.apply_force(-self.velocity)
+            self.apply_force((self.center_position - player_position).normalize() * 10)
+            self.last_hit = time.time_ns()
+        if self.hearts <= 0:
+            print(id(self), "is dying")
+            return self.die(player_position)
+
     def die(self, player_position: Vector2):
-        PIECE_SIZE = 10
+        PIECE_SIZE = 3
         self.kill()
         self.banishing_sound.play()
         # Slice squares the image apart.
@@ -212,18 +224,21 @@ class Enemy(Walker):
         height = PIECE_SIZE
         width = PIECE_SIZE
 
+        image = greyscale(self.image).convert_alpha()
+        particles = []
         for slice_x_position in range(x_slices):
             vertical_offset = 0
             for slice in range(y_slices):
-                subsurf = self.image.subsurface(slice_x_position * width, vertical_offset, width, height)
-                x, y, _, _ = subsurf.get_rect()
-                yield Particle(
+                subsurf = image.subsurface(slice_x_position * width, vertical_offset, width, height)
+                x, y = subsurf.get_offset()
+                particles.append(Particle(
                     surface=self.surface,
                     image=subsurf,
                     initial_position=(self.rect.x + x, self.rect.y + y),
                     reference_force_vector=self.center_position - player_position
-                )
+                ))
                 vertical_offset += height
+        return particles
 
     def update(self, *args, **kwargs) -> None:
         player_position = Vector2(kwargs.get('player_position'))

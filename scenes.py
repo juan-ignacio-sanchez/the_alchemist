@@ -29,7 +29,8 @@ from constants import (
     FLOOR_BACKGROUND,
     WALL_BACKGROUND,
     WALL_FRONT_BACKGROUND,
-
+    SCALE_FACTOR,
+    BACKGROUND_COLUMN,
 )
 from transformations import greyscale, blur
 import settings
@@ -78,15 +79,6 @@ class Game(Scene):
         self.player = Player(self.screen, self.sprites_image, initial_position=(70, self.screen.get_rect().height - 70))
         self.player.velocity = Vector2(0, 0)
 
-        # Enemy
-        self.enemy = Enemy(self.screen, self.sprites_image,
-                      skin='BLOOD_CRYING_MOB', facing=FACING_WEST,
-                      initial_position=(self.screen.get_width(), 60))
-        self.enemy.velocity = Vector2(-.5, .5)
-
-        # Items
-        self.mana = Item(self.screen, self.sprites_image)
-
         # Weapons
         self.weapon = Weapon(self.screen, self.sprites_image, self.player)
 
@@ -98,10 +90,10 @@ class Game(Scene):
             self.sprites_image.subsurface(pygame.rect.Rect(FLOOR_BACKGROUND)),
             (self.screen.get_rect().width, self.screen.get_rect().height)
         )
-        steps = 4
+        steps = SCALE_FACTOR
         walls = []
         original_wall_up_height = self.sprites_image.subsurface(WALL_BACKGROUND).get_rect().height
-        new_wall_up_height = self.screen.get_rect().height // 5
+        new_wall_up_height = self.screen.get_rect().height // SCALE_FACTOR
         original_wall_down_height = self.sprites_image.subsurface(WALL_FRONT_BACKGROUND).get_rect().height
         new_wall_down_height = (original_wall_down_height * new_wall_up_height) // original_wall_up_height
         for i in range(steps):
@@ -123,6 +115,16 @@ class Game(Scene):
             walls.append((wall_surface_down, rect))
 
         floor_surface.blits(walls)
+
+        # Draw columns
+        column_surface = self.sprites_image.subsurface(BACKGROUND_COLUMN)
+        column_surface = pygame.transform.scale(column_surface, [x * SCALE_FACTOR for x in column_surface.get_size()])
+        floor_surface.blits((
+            (column_surface, (0, 0)),
+            (column_surface, (self.screen.get_rect().centerx - column_surface.get_rect().centerx, 0)),
+            (column_surface, (self.screen.get_rect().right - column_surface.get_width(), 0)),
+        ))
+
         return floor_surface
 
     def _update_display(self):
@@ -162,16 +164,21 @@ class Game(Scene):
         pygame.display.flip()
         self.score.value = 0
         self.player.restore_initial_position()
-        self.enemy.restore_initial_position()
         self.background_sound.play(loops=-1)
         self.player_sprites = pygame.sprite.RenderUpdates(self.player)
-        self.item_sprites = pygame.sprite.RenderUpdates(self.mana)
-        self.mobs_sprites = pygame.sprite.RenderUpdates(self.enemy)
-        self.particles_sprites = pygame.sprite.RenderUpdates()
-        self.all_sprites = pygame.sprite.OrderedUpdates(
+        potion = Item(self.screen, self.sprites_image)
+        potion.spawn()
+        self.item_sprites = pygame.sprite.RenderUpdates(potion)
+        enemy = Enemy(
+            self.screen, self.sprites_image,
+            skin='BIG_TROLL_MOB', facing=FACING_WEST,
+            initial_position=(self.screen.get_width(), 60)
+        )
+        self.mobs_sprites = pygame.sprite.RenderUpdates(enemy)
+        self.all_sprites = pygame.sprite.Group(
             self.score,
-            self.mana,
-            self.enemy,
+            enemy,
+            potion,
             self.player,
         )
         self.paused = False
@@ -236,10 +243,13 @@ class Game(Scene):
                             enemy.velocity.update(0, 0)
                             enemy.acceleration.update(0.01, 0.01)
                     elif self.weapon.alive() and weapon_mobs_collide and self.weapon.brandishing != Weapon.STATIC:
+                        mob: Enemy
                         for mob in weapon_mobs_collide:
-                            self.particles_sprites.add(*list(mob.die(self.player.center_position)))
-                            self.all_sprites.add(*self.particles_sprites)
-                        self.weapon.kill()
+                            particles = mob.hurt(self.player.center_position)
+                            if particles:
+                                self.all_sprites.add(particles)
+                        # self.weapon.kill()
+                        self.shake = True
 
                 bottles_picked = pygame.sprite.spritecollide(
                     self.player, self.item_sprites,
@@ -267,12 +277,11 @@ class Game(Scene):
                         self.background_sound.fadeout(2000)
                         self.player_won_sound.play(0, 0, 500)
                         for mob in self.mobs_sprites:
-                            self.particles_sprites.add(*list(mob.die(self.player.center_position)))
-                            self.all_sprites.add(*self.particles_sprites)
+                            self.all_sprites.add(mob.die(self.player.center_position))
                 # +++++++++++++++++++
                 self._update_display()
             self.main_clock.tick(60)
-
+            # print(self.main_clock.get_fps())
 
 class TextScene(Scene):
     def __init__(self, screen, display_size, main_clock, background, path):
