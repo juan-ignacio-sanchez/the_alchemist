@@ -11,8 +11,10 @@ def blur(surface: pygame.Surface, level: int) -> pygame.Surface:
 
 
 def greyscale(surface: pygame.Surface):
-    arr = pygame.surfarray.pixels3d(surface)
+    surface_copy = surface.copy()
+    arr = pygame.surfarray.pixels3d(surface_copy)
     mean_arr = np.dot(arr, [0.216, 0.587, 0.144])
-    mean_arr3d = mean_arr[..., np.newaxis]
-    new_arr = np.repeat(mean_arr3d[:, :, :], 3, axis=2)
-    return pygame.surfarray.make_surface(new_arr)
+    arr[:, :, 0] = mean_arr
+    arr[:, :, 1] = mean_arr
+    arr[:, :, 2] = mean_arr
+    return surface_copy
