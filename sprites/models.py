@@ -10,21 +10,8 @@ from pygame.sprite import Sprite
 from pygame.math import Vector2
 
 import settings
-from transformations import greyscale
-from constants import (
-    FACING_WEST,
-    FACING_EAST,
-    CHARACTERS_DICT,
-    MOBS_DICT,
-    WIDE_GREEN_LIQUID_ITEM,
-    WIDE_BLUE_LIQUID_ITEM,
-    WIDE_RED_LIQUID_ITEM,
-    WALL_HIT_SFX,
-    ENEMY_KILLED_SFX,
-    BASIC_SWORD,
-    SCALE_FACTOR,
-    ITEMS_SCALE_FACTOR,
-)
+import constants
+from transformations import greyscale, redscale
 
 
 class Item(Sprite):
@@ -32,13 +19,14 @@ class Item(Sprite):
     GREEN = 1
     BLUE = 2
     BOTTLE_COLORS = {
-        RED: WIDE_RED_LIQUID_ITEM,
-        BLUE: WIDE_BLUE_LIQUID_ITEM,
-        GREEN: WIDE_GREEN_LIQUID_ITEM,
+        RED: constants.WIDE_RED_LIQUID_ITEM,
+        BLUE: constants.WIDE_BLUE_LIQUID_ITEM,
+        GREEN: constants.WIDE_GREEN_LIQUID_ITEM,
     }
 
     def __init__(self, surface, image, initial_position=(100, 100)):
         super().__init__()
+        self.layer = constants.LAYER_ITEM
         self.surface = surface
         self.original_image = image
         self.spawn()
@@ -51,7 +39,7 @@ class Item(Sprite):
             self.color = color
         skin_rect = pygame.Rect(Item.BOTTLE_COLORS[self.color])
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * ITEMS_SCALE_FACTOR for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * constants.ITEMS_SCALE_FACTOR for side in skin_rect.size])
         self.rect = self.image.get_rect()
         self.rect.center = Vector2(
             random.randint(100, self.surface.get_width() - 100),
@@ -63,6 +51,7 @@ class Particle(Sprite):
     def __init__(self, surface: pygame.Surface, image: pygame.Surface, initial_position: Tuple = (50, 50),
                  reference_force_vector: Vector2 = None):
         super().__init__()
+        self.layer = constants.LAYER_PARTICLE
         self.surface = surface
 
         self.image = image
@@ -98,7 +87,7 @@ class Particle(Sprite):
             self.kill()
 
 class Walker(Sprite):
-    def __init__(self, surface: pygame.Surface, image: pygame.Surface, skin='OLD_MAN', facing=FACING_EAST,
+    def __init__(self, surface: pygame.Surface, image: pygame.Surface, skin='OLD_MAN', facing=constants.FACING_EAST,
                  initial_position=(50, 50)):
         super().__init__()
         self.surface = surface
@@ -113,13 +102,14 @@ class Walker(Sprite):
         self.initial_position = initial_position
         self.rect = self.image.get_rect()
         self.rect.center = initial_position
+        self._image = self.image.copy()
 
         self.center_position = Vector2(self.rect.center)
         self.velocity = Vector2(0, 0)
         self.acceleration = Vector2(0, 0)
 
         # Sound
-        self.knock = pygame.mixer.Sound(Path(WALL_HIT_SFX))
+        self.knock = pygame.mixer.Sound(Path(constants.WALL_HIT_SFX))
         self.knock.set_volume(settings.SFX_VOLUME)
 
     def restore_initial_position(self):
@@ -150,7 +140,6 @@ class Walker(Sprite):
 
     def bounce(self):
         FRICTION = 0.2
-        vel_copy = Vector2(self.velocity)
         if not 0 < self.center_position.x:
             self.center_position.x = 0
             self.velocity.x *= -1 * FRICTION
@@ -171,19 +160,32 @@ class Walker(Sprite):
 
 
 class Enemy(Walker):
+    IMAGE_STATE_NORMAL = 0
+    IMAGE_STATE_HURT = 1
+    IMAGE_STATE_BACK_TO_NORMAL = 2
+    IMAGE_STATE_DIE = 3
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.banishing_sound = pygame.mixer.Sound(Path(ENEMY_KILLED_SFX))
+        self.layer = constants.LAYER_ENEMY
+        self.banishing_sound = pygame.mixer.Sound(Path(constants.ENEMY_KILLED_SFX))
         self.banishing_sound.set_volume(settings.SFX_VOLUME)
         self.hearts = 3
         self.last_hit = time.time()
+        self._back_to_normal = False
+        # Change style of image
+        self.image_state = self.IMAGE_STATE_NORMAL
+        self._image = self.image.copy()
+        self.restore_image = False
+        self.last_player_position = Vector2(1, 0)
+        self.rendering_group = None
 
     def change_facing(self):
-        if self.velocity.x > 0 and not self.facing == FACING_EAST:
-            self.facing = FACING_EAST
+        if self.velocity.x > 0 and not self.facing == constants.FACING_EAST:
+            self.facing = constants.FACING_EAST
             self.image = pygame.transform.flip(self.image, True, False)
-        elif self.velocity.x < 0 and not self.facing == FACING_WEST:
-            self.facing = FACING_WEST
+        elif self.velocity.x < 0 and not self.facing == constants.FACING_WEST:
+            self.facing = constants.FACING_WEST
             self.image = pygame.transform.flip(self.image, True, False)
 
     def limit_vector(self, vector, bottom, top):
@@ -203,14 +205,23 @@ class Enemy(Walker):
     def being_repeled(self):
         return (time.time_ns() - self.last_hit) <= 150_000_000
 
-    def hurt(self, player_position: Vector2, hearts: int = 1):
+    def hurt(self, player_position: Vector2,
+             rendering_group: pygame.sprite.AbstractGroup, hearts: int = 1):
         if not self.being_repeled():
             self.hearts -= 1
             self.apply_force(-self.velocity)
             self.apply_force((self.center_position - player_position).normalize() * 15)
             self.last_hit = time.time_ns()
-        if self.hearts <= 0:
-            return self.die(player_position)
+            self.image = redscale(self.image)
+            self.image_state = self.IMAGE_STATE_HURT
+            self.last_player_position.update(player_position)
+            self.rendering_group = rendering_group
+
+    def update_image_state(self):
+        if self.image_state == self.IMAGE_STATE_HURT and not self.being_repeled():
+            self.image_state = self.IMAGE_STATE_BACK_TO_NORMAL
+        if self.hearts <= 0 and not self.being_repeled():
+            return self.die(self.last_player_position)
 
     def die(self, player_position: Vector2):
         PIECE_SIZE = 3
@@ -222,7 +233,7 @@ class Enemy(Walker):
         height = PIECE_SIZE
         width = PIECE_SIZE
 
-        image = greyscale(self.image).convert_alpha()
+        image = greyscale(self._image).convert_alpha()
         particles = []
         for slice_x_position in range(x_slices):
             vertical_offset = 0
@@ -236,7 +247,8 @@ class Enemy(Walker):
                     reference_force_vector=self.center_position - player_position
                 ))
                 vertical_offset += height
-        return particles
+        if self.rendering_group:
+            self.rendering_group.add(particles)
 
     def update(self, *args, **kwargs) -> None:
         player_position = Vector2(kwargs.get('player_position'))
@@ -249,31 +261,37 @@ class Enemy(Walker):
         if Enemy.different_quadrants(self.velocity, player_position):
             force *= 3
 
+        self.update_image_state()
+        if self.image_state == self.IMAGE_STATE_BACK_TO_NORMAL:
+            self.image = self._image.copy()
+            self.image_state = self.IMAGE_STATE_NORMAL
+
         self.apply_force(force)
         self.move()
         self.bounce()
         self.change_facing()
 
     def set_skin(self):
-        self.facing = FACING_WEST
-        skin_rect = pygame.rect.Rect(MOBS_DICT.get(self.skin))
+        self.facing = constants.FACING_WEST
+        skin_rect = pygame.rect.Rect(constants.MOBS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * SCALE_FACTOR for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * constants.SCALE_FACTOR for side in skin_rect.size])
         self.rect = self.image.get_rect()
 
 
 class Player(Walker):
     def set_skin(self):
-        skin_rect = pygame.rect.Rect(CHARACTERS_DICT.get(self.skin))
+        self.layer = constants.LAYER_PLAYER
+        skin_rect = pygame.rect.Rect(constants.CHARACTERS_DICT.get(self.skin))
         self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * SCALE_FACTOR for side in skin_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * constants.SCALE_FACTOR for side in skin_rect.size])
 
     def change_facing(self, key):
-        if key == pygame.K_RIGHT and not self.facing == FACING_EAST:
-            self.facing = FACING_EAST
+        if key == pygame.K_RIGHT and not self.facing == constants.FACING_EAST:
+            self.facing = constants.FACING_EAST
             self.image = pygame.transform.flip(self.image, True, False)
-        elif key == pygame.K_LEFT and not self.facing == FACING_WEST:
-            self.facing = FACING_WEST
+        elif key == pygame.K_LEFT and not self.facing == constants.FACING_WEST:
+            self.facing = constants.FACING_WEST
             self.image = pygame.transform.flip(self.image, True, False)
 
     def on_key_pressed(self, event_key, keys):
@@ -305,15 +323,16 @@ class Weapon(Sprite):
 
     def __init__(self, surface, image, owner: Player):
         super().__init__()
+        self.layer = constants.LAYER_WEAPON
         self.surface = surface
         self.original_image = image
         self.owner = owner
         self.sound = pygame.mixer.Sound(Path("assets/sounds/sfx/sword_brandishing.wav"))
         self.sound.set_volume(settings.SFX_VOLUME)
 
-        weapon_rect = pygame.Rect(BASIC_SWORD)
+        weapon_rect = pygame.Rect(constants.BASIC_SWORD)
         self.image = self.original_image.subsurface(weapon_rect)
-        self.image = pygame.transform.scale(self.image, [side * ITEMS_SCALE_FACTOR for side in weapon_rect.size])
+        self.image = pygame.transform.scale(self.image, [side * constants.ITEMS_SCALE_FACTOR for side in weapon_rect.size])
         self._image = self.image.copy()
 
         self.rect = self.image.get_rect()
@@ -326,7 +345,7 @@ class Weapon(Sprite):
         self.angle_diff = 0.5
 
     def update(self, *args, **kwargs):
-        FACING = 1 if self.owner.facing == FACING_EAST else -1
+        FACING = 1 if self.owner.facing == constants.FACING_EAST else -1
         if self.brandishing == Weapon.DOWN:
             self.sword_angle += self.angle_diff
             if self.sword_angle >= 170:

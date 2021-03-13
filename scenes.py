@@ -175,7 +175,7 @@ class Game(Scene):
             initial_position=(self.screen.get_width(), 60)
         )
         self.mobs_sprites = pygame.sprite.RenderUpdates(enemy)
-        self.all_sprites = pygame.sprite.Group(
+        self.all_sprites = pygame.sprite.LayeredUpdates(
             self.score,
             enemy,
             potion,
@@ -245,11 +245,10 @@ class Game(Scene):
                     elif self.weapon.alive() and weapon_mobs_collide and self.weapon.brandishing != Weapon.STATIC:
                         mob: Enemy
                         for mob in weapon_mobs_collide:
-                            particles = mob.hurt(self.player.center_position)
+                            particles = mob.hurt(self.player.center_position, self.all_sprites)
                             if particles:
                                 self.all_sprites.add(particles)
                         # self.weapon.kill()
-                        self.shake = True
 
                 bottles_picked = pygame.sprite.spritecollide(
                     self.player, self.item_sprites,

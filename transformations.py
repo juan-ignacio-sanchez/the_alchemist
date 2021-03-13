@@ -18,3 +18,13 @@ def greyscale(surface: pygame.Surface):
     arr[:, :, 1] = mean_arr
     arr[:, :, 2] = mean_arr
     return surface_copy
+
+
+def redscale(surface: pygame.Surface):
+    surface_copy = surface.copy()
+    arr = pygame.surfarray.pixels3d(surface_copy)
+    mean_arr = np.dot(arr, [0.3, 0.4, 0.3])
+    arr[:, :, 0] = 150
+    arr[:, :, 1] = np.dot(arr, [0, 1, 0])
+    arr[:, :, 2] = np.dot(arr, [0, 0, 1])
+    return surface_copy
