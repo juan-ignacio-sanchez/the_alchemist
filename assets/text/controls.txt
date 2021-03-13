@@ -6,6 +6,7 @@ MOVE UP: Up Arrow
 MOVE DOWN: Down Arrow
 MOVE LEFT: Left Arrow
 MOVE RIGHT: Right Arrow
+SWORD: Space Bar
 
 QUIT: Alt + F4 (Windows) / Cmd + Q (Mac)
 
