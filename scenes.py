@@ -41,6 +41,12 @@ class Scene:
         pass
 
 
+class Level:
+    def __init__(self, screen, display_size, max_score):
+        self.screen = screen
+        self.score = Score(self.screen, max_score=max_score, seconds_to_leave=5)
+
+
 class Game(Scene):
     def __init__(self, screen, display_size, main_clock):
         self.screen = screen
@@ -73,8 +79,10 @@ class Game(Scene):
         self.player_won_sound = pygame.mixer.Sound(Path(PLAYER_WIN_SFX))
         self.player_won_sound.set_volume(settings.SFX_VOLUME)
 
+        # Level Configuration
+        self.current_level = Level(screen, screen.get_size(), max_score=5)
+
         # Sprites
-        self.score = Score(self.screen, max_score=26, seconds_to_leave=5)
         # Player
         self.player = Player(self.screen, self.sprites_image, initial_position=(70, self.screen.get_rect().height - 70))
         self.player.velocity = Vector2(0, 0)
@@ -162,7 +170,7 @@ class Game(Scene):
         self.run = True
         self._draw_background()
         pygame.display.flip()
-        self.score.value = 0
+        self.current_level.score.value = 0
         self.player.restore_initial_position()
         self.background_sound.play(loops=-1)
         self.player_sprites = pygame.sprite.RenderUpdates(self.player)
@@ -176,7 +184,7 @@ class Game(Scene):
         )
         self.mobs_sprites = pygame.sprite.RenderUpdates(enemy)
         self.all_sprites = pygame.sprite.LayeredUpdates(
-            self.score,
+            self.current_level.score,
             enemy,
             potion,
             self.player,
@@ -185,7 +193,7 @@ class Game(Scene):
 
     def _stop(self, instantly=False):
         self.run = False
-        fadeout = self.score.transition_seconds * 1000 if not instantly else 0
+        fadeout = self.current_level.score.transition_seconds * 1000 if not instantly else 0
         self.background_sound.fadeout(fadeout)
         self.ending_sound.fadeout(fadeout)
 
@@ -209,18 +217,18 @@ class Game(Scene):
                         self.weapon.on_key_pressed(event.key, pygame.key.get_pressed())
 
             # I want this collision to always be computed.
-            if pygame.sprite.collide_rect(self.player, self.score):
-                self.score.hide()
+            if pygame.sprite.collide_rect(self.player, self.current_level.score):
+                self.current_level.score.hide()
             else:
-                self.score.show()
+                self.current_level.score.show()
 
-            if self.score.won():
+            if self.current_level.score.won():
                 if not self.all_sprites.has(self.player_won_banner):
                     self.all_sprites.add(self.player_won_banner)
-                if self.score.quit_transition():
+                if self.current_level.score.quit_transition():
                     self.screen.blit(blur(pygame.display.get_surface(), 2), (0, 0, *self.display_size))
                     pygame.display.flip()
-                elif self.score.is_time_to_leave():
+                elif self.current_level.score.is_time_to_leave():
                     self._update_display()
                     self._stop()
                 else:
@@ -239,13 +247,14 @@ class Game(Scene):
                         self.player_killed_sound.play()
                         self.background_sound.stop()
                         self.ending_sound.play(loops=-1)
+                        enemy: Enemy
                         for enemy in self.mobs_sprites:
                             enemy.velocity.update(0, 0)
                             enemy.acceleration.update(0.01, 0.01)
                     elif self.weapon.alive() and weapon_mobs_collide and self.weapon.brandishing != Weapon.STATIC:
-                        mob: Enemy
-                        for mob in weapon_mobs_collide:
-                            particles = mob.hurt(self.player.center_position, self.all_sprites)
+                        enemy: Enemy
+                        for enemy in weapon_mobs_collide:
+                            particles = enemy.hurt(self.player.center_position, self.all_sprites)
                             if particles:
                                 self.all_sprites.add(particles)
                         # self.weapon.kill()
@@ -256,7 +265,8 @@ class Game(Scene):
 
                 if bottles_picked:
                     self.bottle_picked.play()
-                    self.score.increase()
+                    self.current_level.score.increase()
+                    bottle: Item
                     for bottle in bottles_picked:
                         if bottle.color == Item.RED:
                             extra_enemy = Enemy(self.screen, self.sprites_image,
@@ -268,15 +278,16 @@ class Game(Scene):
                             self.all_sprites.add(extra_enemy)
                         elif bottle.color == Item.BLUE:
                             self.all_sprites.add(self.weapon)
-                        if not self.score.won():
+                        if not self.current_level.score.won():
                             bottle.spawn()
                         else:
                             bottle.kill()
-                    if self.score.won():
+                    if self.current_level.score.won():
                         self.background_sound.fadeout(2000)
                         self.player_won_sound.play(0, 0, 500)
-                        for mob in self.mobs_sprites:
-                            self.all_sprites.add(mob.die(self.player.center_position))
+                        enemy: Enemy
+                        for enemy in self.mobs_sprites:
+                            self.all_sprites.add(enemy.die(self.player.center_position))
                 # +++++++++++++++++++
                 self._update_display()
             self.main_clock.tick(60)
