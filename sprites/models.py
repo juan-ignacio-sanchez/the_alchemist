@@ -165,7 +165,7 @@ class Enemy(Walker):
     IMAGE_STATE_BACK_TO_NORMAL = 2
     IMAGE_STATE_DIE = 3
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, particles_group, **kwargs):
         super().__init__(*args, **kwargs)
         self.layer = constants.LAYER_ENEMY
         self.banishing_sound = pygame.mixer.Sound(Path(constants.ENEMY_KILLED_SFX))
@@ -178,7 +178,7 @@ class Enemy(Walker):
         self._image = self.image.copy()
         self.restore_image = False
         self.last_player_position = Vector2(1, 0)
-        self.rendering_group = None
+        self.particles_group = particles_group
 
     def change_facing(self):
         if self.velocity.x > 0 and not self.facing == constants.FACING_EAST:
@@ -205,8 +205,7 @@ class Enemy(Walker):
     def being_repeled(self):
         return (time.time_ns() - self.last_hit) <= 150_000_000
 
-    def hurt(self, player_position: Vector2,
-             rendering_group: pygame.sprite.AbstractGroup, hearts: int = 1):
+    def hurt(self, player_position: Vector2, hearts: int = 1):
         if not self.being_repeled():
             self.hearts -= 1
             self.apply_force(-self.velocity)
@@ -215,7 +214,6 @@ class Enemy(Walker):
             self.image = redscale(self.image)
             self.image_state = self.IMAGE_STATE_HURT
             self.last_player_position.update(player_position)
-            self.rendering_group = rendering_group
 
     def update_image_state(self):
         if self.image_state == self.IMAGE_STATE_HURT and not self.being_repeled():
@@ -224,7 +222,7 @@ class Enemy(Walker):
             return self.die(self.last_player_position)
 
     def die(self, player_position: Vector2):
-        PIECE_SIZE = 3
+        PIECE_SIZE = 2
         self.kill()
         self.banishing_sound.play()
         # Slice squares the image apart.
@@ -247,8 +245,9 @@ class Enemy(Walker):
                     reference_force_vector=self.center_position - player_position
                 ))
                 vertical_offset += height
-        if self.rendering_group:
-            self.rendering_group.add(particles)
+
+        if self.particles_group is not None:
+            self.particles_group.add(particles)
 
     def update(self, *args, **kwargs) -> None:
         player_position = Vector2(kwargs.get('player_position'))

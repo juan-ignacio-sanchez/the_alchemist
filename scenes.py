@@ -173,17 +173,20 @@ class Game(Scene):
         self.current_level.score.value = 0
         self.player.restore_initial_position()
         self.background_sound.play(loops=-1)
+
+        self.all_sprites = pygame.sprite.LayeredUpdates()
         self.player_sprites = pygame.sprite.RenderUpdates(self.player)
         potion = Item(self.screen, self.sprites_image)
         potion.spawn()
         self.item_sprites = pygame.sprite.RenderUpdates(potion)
         enemy = Enemy(
             self.screen, self.sprites_image,
+            particles_group=self.all_sprites,
             skin='BIG_TROLL_MOB', facing=FACING_WEST,
             initial_position=(self.screen.get_width(), 60)
         )
         self.mobs_sprites = pygame.sprite.RenderUpdates(enemy)
-        self.all_sprites = pygame.sprite.LayeredUpdates(
+        self.all_sprites.add(
             self.current_level.score,
             enemy,
             potion,
@@ -240,7 +243,6 @@ class Game(Scene):
                 # COLLISIONS ++++++++
                 if self.player.alive():
                     player_mobs_collide = pygame.sprite.spritecollide(self.player, self.mobs_sprites, dokill=False)
-                    weapon_mobs_collide = pygame.sprite.spritecollide(self.weapon, self.mobs_sprites, dokill=False)
                     if player_mobs_collide:
                         self.player.kill()
                         self.all_sprites.add(self.player_killed_banner)
@@ -251,47 +253,52 @@ class Game(Scene):
                         for enemy in self.mobs_sprites:
                             enemy.velocity.update(0, 0)
                             enemy.acceleration.update(0.01, 0.01)
-                    elif self.weapon.alive() and weapon_mobs_collide and self.weapon.brandishing != Weapon.STATIC:
+                    elif self.weapon.alive() and self.weapon.brandishing != Weapon.STATIC:
+                        weapon_mobs_collide = pygame.sprite.spritecollide(self.weapon, self.mobs_sprites, dokill=False)
                         enemy: Enemy
                         for enemy in weapon_mobs_collide:
-                            particles = enemy.hurt(self.player.center_position, self.all_sprites)
+                            particles = enemy.hurt(self.player.center_position)
                             if particles:
                                 self.all_sprites.add(particles)
                         # self.weapon.kill()
 
-                bottles_picked = pygame.sprite.spritecollide(
-                    self.player, self.item_sprites,
-                    dokill=False, collided=pygame.sprite.collide_rect_ratio(0.7))
+                    bottles_picked = pygame.sprite.spritecollide(
+                        self.player, self.item_sprites,
+                        dokill=False, collided=pygame.sprite.collide_rect_ratio(0.7))
 
-                if bottles_picked:
-                    self.bottle_picked.play()
-                    self.current_level.score.increase()
-                    bottle: Item
-                    for bottle in bottles_picked:
-                        if bottle.color == Item.RED:
-                            extra_enemy = Enemy(self.screen, self.sprites_image,
-                                               skin=choice(list(MOBS_DICT)), facing=FACING_WEST,
-                                               initial_position=self.player.center_position + self.player.velocity * -70)
+                    if bottles_picked:
+                        self.bottle_picked.play()
+                        self.current_level.score.increase()
+                        bottle: Item
+                        for bottle in bottles_picked:
+                            if bottle.color == Item.RED:
+                                extra_enemy = Enemy(self.screen, self.sprites_image,
+                                                    particles_group=self.all_sprites,
+                                                    skin=choice(list(MOBS_DICT)), facing=FACING_WEST,
+                                                    initial_position=(
+                                                            self.player.center_position
+                                                            + self.player.velocity * -70
+                                                    ))
 
-                            extra_enemy.velocity = Vector2(-.5, .5)
-                            self.mobs_sprites.add(extra_enemy)
-                            self.all_sprites.add(extra_enemy)
-                        elif bottle.color == Item.BLUE:
-                            self.all_sprites.add(self.weapon)
-                        if not self.current_level.score.won():
-                            bottle.spawn()
-                        else:
-                            bottle.kill()
-                    if self.current_level.score.won():
-                        self.background_sound.fadeout(2000)
-                        self.player_won_sound.play(0, 0, 500)
-                        enemy: Enemy
-                        for enemy in self.mobs_sprites:
-                            self.all_sprites.add(enemy.die(self.player.center_position))
-                # +++++++++++++++++++
+                                extra_enemy.velocity = Vector2(-.5, .5)
+                                self.mobs_sprites.add(extra_enemy)
+                                self.all_sprites.add(extra_enemy)
+                            elif bottle.color == Item.BLUE:
+                                self.all_sprites.add(self.weapon)
+                            if not self.current_level.score.won():
+                                bottle.spawn()
+                            else:
+                                bottle.kill()
+                        if self.current_level.score.won():
+                            self.background_sound.fadeout(2000)
+                            self.player_won_sound.play(0, 0, 500)
+                            enemy: Enemy
+                            for enemy in self.mobs_sprites:
+                                enemy.die(self.player.center_position)
+                    # +++++++++++++++++++
                 self._update_display()
             self.main_clock.tick(60)
-            # print(self.main_clock.get_fps())
+
 
 class TextScene(Scene):
     def __init__(self, screen, display_size, main_clock, background, path):
