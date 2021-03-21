@@ -11,40 +11,36 @@ from pygame.math import Vector2
 
 import settings
 import constants
+from sprites.images import load_sprites
 from transformations import greyscale, redscale
 
 
 class Item(Sprite):
-    RED = 0
-    GREEN = 1
-    BLUE = 2
-    BOTTLE_COLORS = {
-        RED: constants.WIDE_RED_LIQUID_ITEM,
-        BLUE: constants.WIDE_BLUE_LIQUID_ITEM,
-        GREEN: constants.WIDE_GREEN_LIQUID_ITEM,
-    }
+    RED = constants.POTION_RED
+    BLUE = constants.POTION_BLUE
+    GREEN = constants.POTION_GREEN
 
-    def __init__(self, surface, image, initial_position=(100, 100)):
+    def __init__(self, surface, image, color, initial_position=(100, 100)):
         super().__init__()
         self.layer = constants.LAYER_ITEM
         self.surface = surface
         self.original_image = image
-        self.spawn()
-        self.rect.center = initial_position
 
-    def spawn(self, position=None, color=None):
-        if color is None:
-            self.color = random.choice(range(len(Item.BOTTLE_COLORS)))
-        else:
-            self.color = color
-        skin_rect = pygame.Rect(Item.BOTTLE_COLORS[self.color])
+        self.color = color
+        skin_rect = pygame.Rect(constants.POTION_COLORS[color])
         self.image = self.original_image.subsurface(skin_rect)
         self.image = pygame.transform.scale(self.image, [side * constants.ITEMS_SCALE_FACTOR for side in skin_rect.size])
         self.rect = self.image.get_rect()
-        self.rect.center = Vector2(
-            random.randint(100, self.surface.get_width() - 100),
-            random.randint(100, self.surface.get_height() - 100)
-        )
+        self.spawn(initial_position)
+
+    def spawn(self, color=None, position=None):
+        if not position:
+            self.rect.center = Vector2(
+                random.randint(100, self.surface.get_width() - 100),
+                random.randint(100, self.surface.get_height() - 100)
+            )
+        else:
+            self.rect.center = position
 
 
 class Particle(Sprite):
@@ -87,14 +83,14 @@ class Particle(Sprite):
             self.kill()
 
 class Walker(Sprite):
-    def __init__(self, surface: pygame.Surface, image: pygame.Surface, skin='OLD_MAN', facing=constants.FACING_EAST,
-                 initial_position=(50, 50)):
+    def __init__(self, surface: pygame.Surface, skin='OLD_MAN',
+                 facing=constants.FACING_EAST, initial_position=(50, 50)):
         super().__init__()
         self.surface = surface
 
         # Skin related stuff
         self.skin = skin
-        self.original_image = image
+        self.original_image = load_sprites()
         self.set_skin()
         self.last_skin_change = time.time()
         self.facing = facing
@@ -223,6 +219,7 @@ class Enemy(Walker):
 
     def die(self, player_position: Vector2):
         PIECE_SIZE = 2
+        SKIP = 2
         self.kill()
         self.banishing_sound.play()
         # Slice squares the image apart.
@@ -233,9 +230,9 @@ class Enemy(Walker):
 
         image = greyscale(self._image).convert_alpha()
         particles = []
-        for slice_x_position in range(x_slices):
+        for slice_x_position in range(0, x_slices, SKIP):
             vertical_offset = 0
-            for slice in range(y_slices):
+            for slice in range(0, y_slices, SKIP):
                 subsurf = image.subsurface(slice_x_position * width, vertical_offset, width, height)
                 x, y = subsurf.get_offset()
                 particles.append(Particle(
@@ -244,7 +241,7 @@ class Enemy(Walker):
                     initial_position=(self.rect.x + x, self.rect.y + y),
                     reference_force_vector=self.center_position - player_position
                 ))
-                vertical_offset += height
+                vertical_offset += height * SKIP
 
         if self.particles_group is not None:
             self.particles_group.add(particles)

@@ -9,6 +9,11 @@ import constants
 
 
 @lru_cache(maxsize=1)
+def load_sprites():
+    return pygame.image.load(Path(constants.SPRITES_PATH)).convert_alpha()
+
+
+@lru_cache(maxsize=1)
 def load_sprites_ui():
     return pygame.image.load(Path(constants.SPRITES_UI_PATH)).convert_alpha()
 
