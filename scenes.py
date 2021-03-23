@@ -43,12 +43,18 @@ class Level:
             constants.POTION_RED,
             constants.POTION_BLUE,
         ]
+        self._announce_win_flag = True
 
     def random_enemy(self):
         return choice(self.allowed_enemies)
 
     def random_potion(self):
         return choice(self.allowed_potions)
+
+    def announce_win(self):
+        flag = self._announce_win_flag
+        self._announce_win_flag = False
+        return flag
 
 
 class Game(Scene):
@@ -83,14 +89,25 @@ class Game(Scene):
         self.player_won_sound = pygame.mixer.Sound(Path(constants.PLAYER_WIN_SFX))
         self.player_won_sound.set_volume(settings.SFX_VOLUME)
 
-        # Level Configuration
-        self.current_level = Level(screen, screen.get_size(), max_score=5)
-
         # Sprites
         self.potions_sprites = pygame.sprite.RenderUpdates()
         self.mobs_sprites = pygame.sprite.RenderUpdates()
         self.player_sprites = pygame.sprite.RenderUpdates()
         self.all_sprites = pygame.sprite.LayeredUpdates()
+
+    def _load_levels(self):
+        levels = [
+            Level(self.screen, self.screen.get_size(), max_score=3),
+            Level(self.screen, self.screen.get_size(), max_score=5),
+        ]
+        for level in levels:
+            yield level
+
+    def next_level(self):
+        try:
+            return next(self.levels)
+        except StopIteration:
+            return None
 
     def _draw_background(self):
         self.screen.blit(self.background, (0, 0, *self.display_size))
@@ -231,6 +248,10 @@ class Game(Scene):
         self.ending_sound.fadeout(fadeout)
 
     def play(self):
+        # Level Configuration
+        self.levels = self._load_levels()
+        self.current_level = self.next_level()
+
         self._start()
 
         while self.run:
@@ -256,16 +277,23 @@ class Game(Scene):
                 self.current_level.score.show()
 
             if self.current_level.score.won():
-                if not self.all_sprites.has(self.player_won_banner):
-                    self.all_sprites.add(self.player_won_banner)
-                if self.current_level.score.quit_transition():
-                    self.screen.blit(blur(pygame.display.get_surface(), 2), (0, 0, *self.display_size))
-                    pygame.display.flip()
-                elif self.current_level.score.is_time_to_leave():
-                    self._update_display()
-                    self._stop()
+                next_level = self.next_level()
+                if next_level:
+                    self.current_level = next_level
+                    self._restart()
                 else:
-                    self._update_display()
+                    if self.current_level.announce_win():
+                        # Things that needs to be done only once.
+                        self.background_sound.fadeout(2000)
+                        self.player_won_sound.play(0, 0, 500)
+                        self.all_sprites.add(self.player_won_banner)
+                    elif self.current_level.score.quit_transition():
+                        self.screen.blit(blur(pygame.display.get_surface(), 1.1), (0, 0, *self.display_size))
+                        pygame.display.flip()
+                    elif self.current_level.score.is_time_to_leave():
+                        self._stop()
+                    else:
+                        self._update_display()
             elif self.paused:
                 self.screen.blit(self.paused_surface, (0, 0, *self.display_size))
                 pygame.display.update()
@@ -299,6 +327,7 @@ class Game(Scene):
                     if bottles_picked:
                         self.bottle_picked.play()
                         self.current_level.score.increase()
+                        self._spawn_potion()
                         bottle: Item
                         for bottle in bottles_picked:
                             if bottle.color == Item.RED:
@@ -310,13 +339,8 @@ class Game(Scene):
                                 )
                             elif bottle.color == Item.BLUE:
                                 self.all_sprites.add(self.weapon)
-                            if not self.current_level.score.won():
-                                bottle.spawn()
-                            else:
-                                bottle.kill()
+                            bottle.kill()
                         if self.current_level.score.won():
-                            self.background_sound.fadeout(2000)
-                            self.player_won_sound.play(0, 0, 500)
                             enemy: Enemy
                             for enemy in self.mobs_sprites:
                                 enemy.die(self.player.center_position)
