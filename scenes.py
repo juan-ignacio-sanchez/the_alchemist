@@ -1,6 +1,7 @@
 from time import time
 from pathlib import Path
 from random import choice
+from logging import getLogger
 
 import pygame
 import pygame.freetype
@@ -25,6 +26,8 @@ import constants
 import settings
 
 
+logger = getLogger(__name__)
+
 class Scene:
     def play(self):
         pass
@@ -32,7 +35,8 @@ class Scene:
 
 class Level:
     def __init__(self, screen, display_size, max_score,
-                 allowed_enemies=None, allowed_potions=None):
+                 title=None, allowed_enemies=None, allowed_potions=None):
+        self.title = title or "No title"
         self.screen = screen
         self.score = Score(self.screen, max_score=max_score, seconds_to_leave=5)
         self.allowed_enemies = allowed_enemies or [
@@ -44,6 +48,7 @@ class Level:
             constants.POTION_BLUE,
         ]
         self._announce_win_flag = True
+        self.next_level = None
 
     def random_enemy(self):
         return choice(self.allowed_enemies)
@@ -100,14 +105,9 @@ class Game(Scene):
             Level(self.screen, self.screen.get_size(), max_score=3),
             Level(self.screen, self.screen.get_size(), max_score=5),
         ]
-        for level in levels:
-            yield level
-
-    def next_level(self):
-        try:
-            return next(self.levels)
-        except StopIteration:
-            return None
+        for i in range(len(levels)-1):
+            levels[i].next_level = levels[i+1]
+        self.current_level = levels[0]
 
     def _draw_background(self):
         self.screen.blit(self.background, (0, 0, *self.display_size))
@@ -250,7 +250,6 @@ class Game(Scene):
     def play(self):
         # Level Configuration
         self.levels = self._load_levels()
-        self.current_level = self.next_level()
 
         self._start()
 
@@ -277,23 +276,29 @@ class Game(Scene):
                 self.current_level.score.show()
 
             if self.current_level.score.won():
-                next_level = self.next_level()
-                if next_level:
-                    self.current_level = next_level
-                    self._restart()
+                logger.debug(f'Level {self.current_level.title} won.')
+                if self.current_level.score.quit_transition():
+                    logger.debug(f'Quit transition.')
+                    self.screen.blit(blur(pygame.display.get_surface(), 1.1), (0, 0, *self.display_size))
+                    pygame.display.flip()
                 else:
+                    logger.debug(f'Update on WON')
+                    self._update_display()
+
+                if not self.current_level.next_level:
                     if self.current_level.announce_win():
                         # Things that needs to be done only once.
                         self.background_sound.fadeout(2000)
                         self.player_won_sound.play(0, 0, 500)
                         self.all_sprites.add(self.player_won_banner)
-                    elif self.current_level.score.quit_transition():
-                        self.screen.blit(blur(pygame.display.get_surface(), 1.1), (0, 0, *self.display_size))
-                        pygame.display.flip()
                     elif self.current_level.score.is_time_to_leave():
+                        logger.debug(f'is time to leave (for real.)')
                         self._stop()
-                    else:
-                        self._update_display()
+                elif self.current_level.score.is_time_to_leave():
+                    logger.debug(f'is time to leave (Next level is coming)')
+                    self.current_level = self.current_level.next_level
+                    self._restart()
+
             elif self.paused:
                 self.screen.blit(self.paused_surface, (0, 0, *self.display_size))
                 pygame.display.update()

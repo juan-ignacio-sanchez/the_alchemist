@@ -2,6 +2,7 @@ import os
 
 from pygame import FULLSCREEN, RESIZABLE, SCALED, DOUBLEBUF, HWACCEL, HWSURFACE
 
+LOG_LEVEL = os.getenv('LOG_LEVEL', default='WARNING')
 
 VOLUME = 0.1
 SFX_VOLUME = 0.3
