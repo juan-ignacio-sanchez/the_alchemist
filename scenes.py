@@ -18,7 +18,8 @@ from sprites.ui import (
     Score,
     PauseBanner,
     PlayerKilledBanner,
-    PlayerWonBanner
+    Banner,
+    EphemeralBanner,
 )
 from sprites.images import load_sprites
 from transformations import greyscale, blur
@@ -36,6 +37,7 @@ class Scene:
 class Level:
     def __init__(self, screen, display_size, max_score,
                  title=None, allowed_enemies=None, allowed_potions=None):
+        self.number = 0
         self.title = title or "No title"
         self.screen = screen
         self.score = Score(self.screen, max_score=max_score, seconds_to_leave=5)
@@ -61,6 +63,11 @@ class Level:
         self._announce_win_flag = False
         return flag
 
+    def put_banner(self, group: pygame.sprite.Group):
+        group.add(EphemeralBanner(2, self.screen, main_text=self.title,
+                                  secondary_text=f'Level {self.number}'))
+
+
 
 class Game(Scene):
     def __init__(self, screen, display_size, main_clock):
@@ -78,7 +85,11 @@ class Game(Scene):
         # Killed State
         self.player_killed_banner = PlayerKilledBanner(self.screen)
         # Won State
-        self.player_won_banner = PlayerWonBanner(self.screen)
+        self.player_won_banner = Banner(
+            self.screen,
+            main_text="Home's safe for now",
+            secondary_text="but alchemy is tricky.. be careful."
+        )
         # Images
         self.sprites_image = load_sprites()
         self.background = self._create_background()
@@ -93,6 +104,8 @@ class Game(Scene):
         self.ending_sound.set_volume(settings.VOLUME)
         self.player_won_sound = pygame.mixer.Sound(Path(constants.PLAYER_WIN_SFX))
         self.player_won_sound.set_volume(settings.SFX_VOLUME)
+        self.interlude_win_sound = pygame.mixer.Sound(Path(constants.INTERLUDE_WIN_SFX))
+        self.interlude_win_sound.set_volume(settings.SFX_VOLUME)
 
         # Sprites
         self.potions_sprites = pygame.sprite.RenderUpdates()
@@ -102,11 +115,52 @@ class Game(Scene):
 
     def _load_levels(self):
         levels = [
-            Level(self.screen, self.screen.get_size(), max_score=3),
-            Level(self.screen, self.screen.get_size(), max_score=5),
+            Level(self.screen, self.screen.get_size(), max_score=3, title='Apprentice',
+                  allowed_enemies=[
+                      constants.MOB_SMALL_BLOOD_CRYING,
+                  ],
+                  allowed_potions=[
+                      constants.POTION_GREEN,
+                  ]),
+            Level(self.screen, self.screen.get_size(), max_score=3, title='Blacksmith',
+                  allowed_enemies=[
+                      constants.MOB_SMALL_BLOOD_CRYING,
+                      constants.MOB_BLOOD_CRYING,
+                  ],
+                  allowed_potions=[
+                      constants.POTION_BLUE,
+                  ]),
+            Level(self.screen, self.screen.get_size(), max_score=5, title='Cursed',
+                  allowed_enemies=[
+                      constants.MOB_SMALL_BLOOD_CRYING,
+                      constants.MOB_BLOOD_CRYING,
+                      constants.MOB_SMALL_TROLL,
+                  ],
+                  allowed_potions=[
+                      constants.POTION_RED,
+                  ]),
+            Level(self.screen, self.screen.get_size(), max_score=10, title="There's hope",
+                  allowed_potions=[
+                      constants.POTION_GREEN,
+                      constants.POTION_RED,
+                      constants.POTION_BLUE,
+                  ]),
+            Level(self.screen, self.screen.get_size(), max_score=15, title="Nightmare",
+                  allowed_enemies=[
+                      constants.MOB_BIG_TROLL
+                  ],
+                  allowed_potions=[
+                      constants.POTION_GREEN,
+                      constants.POTION_RED,
+                      constants.POTION_BLUE,
+                  ]),
         ]
         for i in range(len(levels)-1):
             levels[i].next_level = levels[i+1]
+
+        for i in range(len(levels)):
+            levels[i].number = i + 1
+
         self.current_level = levels[0]
 
     def _draw_background(self):
@@ -240,6 +294,7 @@ class Game(Scene):
         self._draw_background()
         pygame.display.flip()
         self.background_sound.play(loops=-1)
+        self.current_level.put_banner(self.all_sprites)
 
     def _stop(self, instantly=False):
         self.run = False
@@ -249,7 +304,7 @@ class Game(Scene):
 
     def play(self):
         # Level Configuration
-        self.levels = self._load_levels()
+        self._load_levels()
 
         self._start()
 
@@ -298,6 +353,10 @@ class Game(Scene):
                     logger.debug(f'is time to leave (Next level is coming)')
                     self.current_level = self.current_level.next_level
                     self._restart()
+                elif self.current_level.announce_win():
+                    # Things that needs to be done only once.
+                    self.background_sound.fadeout(2000)
+                    self.interlude_win_sound.play()
 
             elif self.paused:
                 self.screen.blit(self.paused_surface, (0, 0, *self.display_size))

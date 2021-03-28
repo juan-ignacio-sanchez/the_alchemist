@@ -150,11 +150,11 @@ class MainMenu(Sprite):
         return self.selected_option
 
 
-class PlayerWonBanner(Sprite):
-    def __init__(self, screen: pygame.Surface):
+class Banner(Sprite):
+    def __init__(self, screen: pygame.Surface, main_text, secondary_text):
         super().__init__()
-        self.main_text = "Home's safe for now..."
-        self.secondary_text = "...but alchemy is tricky. Prepare yourself."
+        self.main_text = main_text
+        self.secondary_text = secondary_text
         self.screen = screen
         self.main_fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 52)
         self.main_fnt.pad = True
@@ -182,6 +182,17 @@ class PlayerWonBanner(Sprite):
         # self.image, self.rect = build_frame(self.image, self.rect)
         self.rect.center = self.screen.get_rect().center
 
+
+class EphemeralBanner(Banner):
+    def __init__(self, expiration, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.creation = time.time()
+        self.expiration = expiration
+
+    def update(self, *args, **kwargs):
+        super().update()
+        if time.time() - self.creation >= self.expiration:
+            self.kill()
 
 class PlayerKilledBanner(Sprite):
     def __init__(self, screen: pygame.Surface):
