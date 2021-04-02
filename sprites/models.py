@@ -218,8 +218,9 @@ class Enemy(Walker):
             return self.die(self.last_player_position)
 
     def die(self, player_position: Vector2):
-        PIECE_SIZE = 2
-        SKIP = 2
+        PIECE_SIZE = 3
+
+        SKIP = 1
         self.kill()
         self.banishing_sound.play()
         # Slice squares the image apart.
@@ -228,7 +229,7 @@ class Enemy(Walker):
         height = PIECE_SIZE
         width = PIECE_SIZE
 
-        image = greyscale(self._image).convert_alpha()
+        image = self._image.copy()
         particles = []
         for slice_x_position in range(0, x_slices, SKIP):
             vertical_offset = 0

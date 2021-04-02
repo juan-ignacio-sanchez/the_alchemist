@@ -15,14 +15,13 @@ from sprites.models import (
     Weapon,
 )
 from sprites.ui import (
-    Score,
     PauseBanner,
     PlayerKilledBanner,
     Banner,
-    EphemeralBanner,
 )
 from sprites.images import load_sprites
-from transformations import greyscale, blur
+from transformations import greyscale, blur, redscale
+from levels import load_levels
 import constants
 import settings
 
@@ -32,41 +31,6 @@ logger = getLogger(__name__)
 class Scene:
     def play(self):
         pass
-
-
-class Level:
-    def __init__(self, screen, display_size, max_score,
-                 title=None, allowed_enemies=None, allowed_potions=None):
-        self.number = 0
-        self.title = title or "No title"
-        self.screen = screen
-        self.score = Score(self.screen, max_score=max_score, seconds_to_leave=5)
-        self.allowed_enemies = allowed_enemies or [
-            constants.MOB_BIG_TROLL,
-        ]
-        self.allowed_potions = allowed_potions or [
-            constants.POTION_GREEN,
-            constants.POTION_RED,
-            constants.POTION_BLUE,
-        ]
-        self._announce_win_flag = True
-        self.next_level = None
-
-    def random_enemy(self):
-        return choice(self.allowed_enemies)
-
-    def random_potion(self):
-        return choice(self.allowed_potions)
-
-    def announce_win(self):
-        flag = self._announce_win_flag
-        self._announce_win_flag = False
-        return flag
-
-    def put_banner(self, group: pygame.sprite.Group):
-        group.add(EphemeralBanner(2, self.screen, main_text=self.title,
-                                  secondary_text=f'Level {self.number}'))
-
 
 
 class Game(Scene):
@@ -112,56 +76,6 @@ class Game(Scene):
         self.mobs_sprites = pygame.sprite.RenderUpdates()
         self.player_sprites = pygame.sprite.RenderUpdates()
         self.all_sprites = pygame.sprite.LayeredUpdates()
-
-    def _load_levels(self):
-        levels = [
-            Level(self.screen, self.screen.get_size(), max_score=3, title='Apprentice',
-                  allowed_enemies=[
-                      constants.MOB_SMALL_BLOOD_CRYING,
-                  ],
-                  allowed_potions=[
-                      constants.POTION_GREEN,
-                  ]),
-            Level(self.screen, self.screen.get_size(), max_score=3, title='Blacksmith',
-                  allowed_enemies=[
-                      constants.MOB_SMALL_BLOOD_CRYING,
-                      constants.MOB_BLOOD_CRYING,
-                  ],
-                  allowed_potions=[
-                      constants.POTION_BLUE,
-                  ]),
-            Level(self.screen, self.screen.get_size(), max_score=5, title='Cursed',
-                  allowed_enemies=[
-                      constants.MOB_SMALL_BLOOD_CRYING,
-                      constants.MOB_BLOOD_CRYING,
-                      constants.MOB_SMALL_TROLL,
-                  ],
-                  allowed_potions=[
-                      constants.POTION_RED,
-                  ]),
-            Level(self.screen, self.screen.get_size(), max_score=10, title="There's hope",
-                  allowed_potions=[
-                      constants.POTION_GREEN,
-                      constants.POTION_RED,
-                      constants.POTION_BLUE,
-                  ]),
-            Level(self.screen, self.screen.get_size(), max_score=15, title="Nightmare",
-                  allowed_enemies=[
-                      constants.MOB_BIG_TROLL
-                  ],
-                  allowed_potions=[
-                      constants.POTION_GREEN,
-                      constants.POTION_RED,
-                      constants.POTION_BLUE,
-                  ]),
-        ]
-        for i in range(len(levels)-1):
-            levels[i].next_level = levels[i+1]
-
-        for i in range(len(levels)):
-            levels[i].number = i + 1
-
-        self.current_level = levels[0]
 
     def _draw_background(self):
         self.screen.blit(self.background, (0, 0, *self.display_size))
@@ -304,7 +218,7 @@ class Game(Scene):
 
     def play(self):
         # Level Configuration
-        self._load_levels()
+        self.current_level = load_levels(self.screen)
 
         self._start()
 
@@ -391,7 +305,8 @@ class Game(Scene):
                     if bottles_picked:
                         self.bottle_picked.play()
                         self.current_level.score.increase()
-                        self._spawn_potion()
+                        if not self.current_level.score.won():
+                            self._spawn_potion()
                         bottle: Item
                         for bottle in bottles_picked:
                             if bottle.color == Item.RED:

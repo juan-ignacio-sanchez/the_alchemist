@@ -5,6 +5,7 @@ from pathlib import Path
 import pygame
 import pygame.freetype
 from pygame.sprite import Sprite
+from pygame.transform import scale
 
 import settings
 from constants import (
@@ -193,6 +194,22 @@ class EphemeralBanner(Banner):
         super().update()
         if time.time() - self.creation >= self.expiration:
             self.kill()
+
+
+class EphemeralVisualEffect(Sprite):
+    def __init__(self, screen, image, expiration, *args, **kwargs):
+        super().__init__(*args)
+        self.screen = screen
+        self.image = scale(image, screen.get_size())
+        self.rect = image.get_rect()
+        self.creation = time.time()
+        self.expiration = expiration
+
+    def update(self, *args, **kwargs):
+        super().update()
+        if time.time() - self.creation >= self.expiration:
+            self.kill()
+
 
 class PlayerKilledBanner(Sprite):
     def __init__(self, screen: pygame.Surface):
