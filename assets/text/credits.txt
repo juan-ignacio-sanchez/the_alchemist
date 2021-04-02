@@ -15,4 +15,6 @@ Find Eric's work at this page: http://soundimage.org/.
 
 ~ Ora, Lege, Lege, Lege, Relege, Labora et Invenies ~
 
+Version: 1.4.0
+
 PRESS ESC TO EXIT
