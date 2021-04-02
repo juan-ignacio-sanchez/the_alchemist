@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 from collections import namedtuple
 from pathlib import Path
 
@@ -96,6 +97,13 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        format='%(asctime)s | %(message)s',
+        datefmt='%m/%d/%Y %I:%M:%S %p',
+        level=getattr(logging, settings.LOG_LEVEL),
+        filename=Path('./thealchemist.log'),
+        filemode='w',
+    )
     if hasattr(sys, "_MEIPASS"):
         os.chdir(sys._MEIPASS)
     main()

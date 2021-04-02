@@ -2,7 +2,7 @@ import pygame
 import numpy as np
 
 
-def blur(surface: pygame.Surface, level: int) -> pygame.Surface:
+def blur(surface: pygame.Surface, level: float) -> pygame.Surface:
     size = surface.get_size()
     scale_size = pygame.math.Vector2(size) / level
     surface = pygame.transform.smoothscale(surface, (int(scale_size.x), int(scale_size.y)))
