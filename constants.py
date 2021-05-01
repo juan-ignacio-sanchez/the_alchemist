@@ -15,24 +15,13 @@ LAYER_PARTICLE = 5
 FACING_EAST = 0
 FACING_WEST = 1
 
-OLD_MAN = (98, 224, 12, 16)
-PIRATE = (113, 224, 14, 16)
-RED_WIZARD = (128, 224, 15, 16)
-PURPLE_WIZARD = (144, 224, 15, 16)
+PLAYER_RECT_OLD_MAN = (98, 224, 12, 16)
 
-CHARACTERS_DICT = {
-    'OLD_MAN': OLD_MAN,
-    'PIRATE': PIRATE,
-    'RED_WIZARD': RED_WIZARD,
-    'PURPLE_WIZARD': PURPLE_WIZARD,
+PLAYER_OLD_MAN = 'OLD_MAN'
+
+PLAYER_DICT = {
+    PLAYER_OLD_MAN: PLAYER_RECT_OLD_MAN,
 }
-
-CHARACTERS = [
-    'OLD_MAN',
-    'PIRATE',
-    'RED_WIZARD',
-    'PURPLE_WIZARD',
-]
 
 MOB_SMALL_BLOOD_CRYING = "SMALL_BLOOD_CRYING_MOB"
 MOB_BLOOD_CRYING = "BLOOD_CRYING_MOB"
@@ -126,3 +115,4 @@ MENU_ITEM_CHANGED_SFX = "./assets/sounds/sfx/menu_item_changed.wav"
 ENEMY_KILLED_SFX = "./assets/sounds/sfx/banishing.wav"
 PLAYER_WIN_SFX = "./assets/sounds/sfx/win_sound.wav"
 INTERLUDE_WIN_SFX = "./assets/sounds/sfx/interlude_win_sound.wav"
+FOOTSTEPS_SFX = "./assets/sounds/sfx/footsteps.mp3"

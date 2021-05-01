@@ -44,7 +44,6 @@ def load_levels(screen):
     levels = [
         Level(screen, screen.get_size(), max_score=3, title='Apprentice',
               allowed_enemies=[
-                  constants.MOB_SMALL_BLOOD_CRYING,
               ],
               allowed_potions=[
                   constants.POTION_GREEN,

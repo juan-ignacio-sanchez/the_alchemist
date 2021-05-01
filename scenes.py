@@ -2,6 +2,7 @@ from time import time
 from pathlib import Path
 from random import choice
 from logging import getLogger
+from collections import defaultdict
 
 import pygame
 import pygame.freetype
@@ -219,6 +220,12 @@ class Game(Scene):
     def play(self):
         # Level Configuration
         self.current_level = load_levels(self.screen)
+        KEYS = defaultdict(lambda: "Other Key", {
+            pygame.K_UP: "UP",
+            pygame.K_DOWN: "DOWN",
+            pygame.K_LEFT: "LEFT",
+            pygame.K_RIGHT: "RIGHT",
+        })
 
         self._start()
 
@@ -235,8 +242,12 @@ class Game(Scene):
                     elif event.key in (pygame.K_p, pygame.K_PAUSE):
                         self._pause()
                     elif not self.paused:
+                        logger.debug(f"Key pressed {KEYS[event.key]}")
                         self.player.on_key_pressed(event.key, pygame.key.get_pressed())
                         self.weapon.on_key_pressed(event.key, pygame.key.get_pressed())
+                elif event.type == pygame.KEYUP:
+                    self.player.on_key_released(event.key, pygame.key.get_pressed())
+                    logger.debug(f"Key released {KEYS[event.key]}")
 
             # I want this collision to always be computed.
             if pygame.sprite.collide_rect(self.player, self.current_level.score):
