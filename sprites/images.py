@@ -9,6 +9,11 @@ import constants
 
 
 @lru_cache(maxsize=1)
+def load_player_walking():
+    return pygame.image.load(Path(constants.SPRITES_PLAYER_WALKING)).convert_alpha()
+
+
+@lru_cache(maxsize=1)
 def load_sprites():
     return pygame.image.load(Path(constants.SPRITES_PATH)).convert_alpha()
 

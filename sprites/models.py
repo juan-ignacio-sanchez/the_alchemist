@@ -12,7 +12,7 @@ from pygame.math import Vector2
 
 import settings
 import constants
-from sprites.images import load_sprites
+from sprites.images import load_sprites, load_player_walking
 from transformations import greyscale, redscale, slice_into_particles
 
 
@@ -93,16 +93,18 @@ class Particle(Sprite):
 class Walker(Sprite):
     def __init__(self, surface: pygame.Surface, skin=constants.PLAYER_OLD_MAN,
                  facing=constants.FACING_EAST, initial_position=(50, 50),
-                 skin_source=None):
+                 skin_source=None, image_sequence=None, loader=load_sprites):
         super().__init__()
         self.surface = surface
 
         # Skin related stuff
+        self.image_sequence = image_sequence or list(skin_source.values())
+        self.last_skin_change = 0
+        self.current_image = 0
         self.skin_source = skin_source
         self.skin = skin
-        self.original_image = load_sprites()
+        self.original_image = loader()
         self.set_skin()
-        self.last_skin_change = time.time()
         self.facing = facing
 
         self.initial_position = initial_position
@@ -120,6 +122,10 @@ class Walker(Sprite):
         self.footsteps = pygame.mixer.Sound(Path(constants.FOOTSTEPS_SFX))
         self.footsteps.set_volume(settings.SFX_VOLUME)
 
+    def next_image(self):
+        self.current_image = (self.current_image + 1) % 2
+        return self.image_sequence[self.current_image]
+
     def restore_initial_position(self):
         self.velocity.update(0, 0)
         self.acceleration.update(0, 0)
@@ -127,10 +133,11 @@ class Walker(Sprite):
         self.rect.center = self.center_position
 
     def set_skin(self):
-        skin_rect = pygame.rect.Rect(self.skin_source.get(self.skin))
-        self.image = self.original_image.subsurface(skin_rect)
-        self.image = pygame.transform.scale(self.image, [side * constants.SCALE_FACTOR for side in skin_rect.size])
-
+        if time.time() - self.last_skin_change > 0.2:
+            self.last_skin_change = time.time()
+            skin_rect = pygame.rect.Rect(self.skin_source.get(self.skin))
+            self.image = self.original_image.subsurface(self.next_image())
+            self.image = pygame.transform.scale(self.image, [side * constants.SCALE_FACTOR for side in skin_rect.size])
 
     def apply_force(self, force: Vector2):
         self.acceleration += force
@@ -297,7 +304,9 @@ class Enemy(Walker):
 
 class Player(Walker):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, skin_source=constants.PLAYER_DICT, **kwargs)
+        super().__init__(*args, image_sequence=constants.PLAYER_WALKING_SEQUENCE,
+                         skin_source=constants.PLAYER_DICT,
+                         loader=load_player_walking, **kwargs)
         self.layer = constants.LAYER_PLAYER
         self.direction = Vector2(0, 0)
         self.walking = False
@@ -345,6 +354,7 @@ class Player(Walker):
     def move(self):
         magnitude = 1.5
         if self.direction.magnitude() > 0:
+            self.set_skin()
             self.apply_force(self.direction.normalize() * magnitude)
         self.apply_friction()
         super().move()

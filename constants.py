@@ -16,6 +16,12 @@ FACING_EAST = 0
 FACING_WEST = 1
 
 PLAYER_RECT_OLD_MAN = (98, 224, 12, 16)
+PLAYER_RECT_OLD_MAN_STEP_OUT = (0, 0, 12, 16)
+PLAYER_RECT_OLD_MAN_STEP_IN = (13, 0, 12, 16)
+PLAYER_WALKING_SEQUENCE = [
+    PLAYER_RECT_OLD_MAN_STEP_OUT,
+    PLAYER_RECT_OLD_MAN_STEP_IN
+]
 
 PLAYER_OLD_MAN = 'OLD_MAN'
 
@@ -101,6 +107,7 @@ UI_BOX_TEXT_COLOR_PAPYRUS = (71, 58, 57)
 # Sprites
 SPRITES_PATH = "./assets/sprites/sprites.png"
 SPRITES_UI_PATH = "./assets/sprites/sprites_ui.png"
+SPRITES_PLAYER_WALKING = "./assets/sprites/old_man_walking.png"
 
 # Sound
 BACKGROUND_SOUND = "./assets/sounds/background/Guitar-Mayhem-6" + settings.AUDIO_EXTENSION
