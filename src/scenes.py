@@ -2,6 +2,7 @@ from time import time
 from pathlib import Path
 from random import choice
 from logging import getLogger
+from collections import defaultdict
 
 import pygame
 import pygame.freetype
@@ -28,6 +29,7 @@ import settings
 
 logger = getLogger(__name__)
 
+
 class Scene:
     def play(self):
         pass
@@ -52,23 +54,23 @@ class Game(Scene):
         self.player_won_banner = Banner(
             self.screen,
             main_text="Home's safe for now",
-            secondary_text="but alchemy is tricky.. be careful."
+            secondary_text="but alchemy is tricky.. be careful.",
         )
         # Images
         self.sprites_image = load_sprites()
         self.background = self._create_background()
         # Sounds
-        self.bottle_picked = pygame.mixer.Sound(Path(constants.BOTTLE_PICKED_SFX))
+        self.bottle_picked = pygame.mixer.Sound(constants.SFX_BOTTLE_PICKED)
         self.bottle_picked.set_volume(settings.SFX_VOLUME)
-        self.player_killed_sound = pygame.mixer.Sound(Path(constants.PLAYER_KILLED_SFX))
+        self.player_killed_sound = pygame.mixer.Sound(constants.SFX_PLAYER_KILLED)
         self.player_killed_sound.set_volume(settings.SFX_VOLUME)
         self.background_sound = pygame.mixer.Sound(constants.BACKGROUND_SOUND)
         self.background_sound.set_volume(settings.VOLUME)
-        self.ending_sound = pygame.mixer.Sound(Path(constants.ENDING_SOUND))
+        self.ending_sound = pygame.mixer.Sound(constants.ENDING_SOUND)
         self.ending_sound.set_volume(settings.VOLUME)
-        self.player_won_sound = pygame.mixer.Sound(Path(constants.PLAYER_WIN_SFX))
+        self.player_won_sound = pygame.mixer.Sound(constants.SFX_PLAYER_WIN)
         self.player_won_sound.set_volume(settings.SFX_VOLUME)
-        self.interlude_win_sound = pygame.mixer.Sound(Path(constants.INTERLUDE_WIN_SFX))
+        self.interlude_win_sound = pygame.mixer.Sound(constants.SFX_INTERLUDE_WIN)
         self.interlude_win_sound.set_volume(settings.SFX_VOLUME)
 
         # Sprites
@@ -83,18 +85,26 @@ class Game(Scene):
     def _create_background(self) -> pygame.Surface:
         floor_surface = pygame.transform.scale(
             self.sprites_image.subsurface(pygame.rect.Rect(constants.FLOOR_BACKGROUND)),
-            (self.screen.get_rect().width, self.screen.get_rect().height)
+            (self.screen.get_rect().width, self.screen.get_rect().height),
         )
         steps = constants.SCALE_FACTOR
         walls = []
-        original_wall_up_height = self.sprites_image.subsurface(constants.WALL_BACKGROUND).get_rect().height
+        original_wall_up_height = (
+            self.sprites_image.subsurface(constants.WALL_BACKGROUND).get_rect().height
+        )
         new_wall_up_height = self.screen.get_rect().height // constants.SCALE_FACTOR
-        original_wall_down_height = self.sprites_image.subsurface(constants.WALL_FRONT_BACKGROUND).get_rect().height
-        new_wall_down_height = (original_wall_down_height * new_wall_up_height) // original_wall_up_height
+        original_wall_down_height = (
+            self.sprites_image.subsurface(constants.WALL_FRONT_BACKGROUND)
+            .get_rect()
+            .height
+        )
+        new_wall_down_height = (
+            original_wall_down_height * new_wall_up_height
+        ) // original_wall_up_height
         for i in range(steps):
             wall_surface_up = pygame.transform.scale(
                 self.sprites_image.subsurface(constants.WALL_BACKGROUND),
-                (self.screen.get_rect().width // steps, new_wall_up_height)
+                (self.screen.get_rect().width // steps, new_wall_up_height),
             )
             rect = wall_surface_up.get_rect()
             rect.x += i * rect.width
@@ -102,7 +112,7 @@ class Game(Scene):
 
             wall_surface_down = pygame.transform.scale(
                 self.sprites_image.subsurface(constants.WALL_FRONT_BACKGROUND),
-                (self.screen.get_rect().width // steps, new_wall_down_height)
+                (self.screen.get_rect().width // steps, new_wall_down_height),
             )
             rect = wall_surface_up.get_rect()
             rect.x += i * rect.width
@@ -113,12 +123,27 @@ class Game(Scene):
 
         # Draw columns
         column_surface = self.sprites_image.subsurface(constants.BACKGROUND_COLUMN)
-        column_surface = pygame.transform.scale(column_surface, [x * constants.SCALE_FACTOR for x in column_surface.get_size()])
-        floor_surface.blits((
-            (column_surface, (0, 0)),
-            (column_surface, (self.screen.get_rect().centerx - column_surface.get_rect().centerx, 0)),
-            (column_surface, (self.screen.get_rect().right - column_surface.get_width(), 0)),
-        ))
+        column_surface = pygame.transform.scale(
+            column_surface,
+            [x * constants.SCALE_FACTOR for x in column_surface.get_size()],
+        )
+        floor_surface.blits(
+            (
+                (column_surface, (0, 0)),
+                (
+                    column_surface,
+                    (
+                        self.screen.get_rect().centerx
+                        - column_surface.get_rect().centerx,
+                        0,
+                    ),
+                ),
+                (
+                    column_surface,
+                    (self.screen.get_rect().right - column_surface.get_width(), 0),
+                ),
+            )
+        )
 
         return floor_surface
 
@@ -136,17 +161,16 @@ class Game(Scene):
 
     def _spawn_player(self):
         player = Player(
-            self.screen,
-            initial_position=(
-                70, self.screen.get_rect().height - 70
-            )
+            self.screen, initial_position=(70, self.screen.get_rect().height - 70)
         )
         self.player_sprites.add(player)
         self.all_sprites.add(player)
         return player
 
     def _spawn_potion(self):
-        potion = Item(self.screen, self.sprites_image, self.current_level.random_potion())
+        potion = Item(
+            self.screen, self.sprites_image, self.current_level.random_potion()
+        )
         self.potions_sprites.add(potion)
         self.all_sprites.add(potion)
         return potion
@@ -157,7 +181,7 @@ class Game(Scene):
             particles_group=self.all_sprites,
             skin=self.current_level.random_enemy(),
             facing=constants.FACING_WEST,  # TODO: this doesn't looks quite right.
-            initial_position=initial_position or (self.screen.get_width(), 60)
+            initial_position=initial_position or (self.screen.get_width(), 60),
         )
         self.mobs_sprites.add(enemy)
         self.all_sprites.add(enemy)
@@ -212,13 +236,24 @@ class Game(Scene):
 
     def _stop(self, instantly=False):
         self.run = False
-        fadeout = self.current_level.score.transition_seconds * 1000 if not instantly else 0
+        fadeout = (
+            self.current_level.score.transition_seconds * 1000 if not instantly else 0
+        )
         self.background_sound.fadeout(fadeout)
         self.ending_sound.fadeout(fadeout)
 
     def play(self):
         # Level Configuration
         self.current_level = load_levels(self.screen)
+        KEYS = defaultdict(
+            lambda: "Other Key",
+            {
+                pygame.K_UP: "UP",
+                pygame.K_DOWN: "DOWN",
+                pygame.K_LEFT: "LEFT",
+                pygame.K_RIGHT: "RIGHT",
+            },
+        )
 
         self._start()
 
@@ -235,8 +270,12 @@ class Game(Scene):
                     elif event.key in (pygame.K_p, pygame.K_PAUSE):
                         self._pause()
                     elif not self.paused:
+                        logger.debug(f"Key pressed {KEYS[event.key]}")
                         self.player.on_key_pressed(event.key, pygame.key.get_pressed())
                         self.weapon.on_key_pressed(event.key, pygame.key.get_pressed())
+                elif event.type == pygame.KEYUP:
+                    self.player.on_key_released(event.key, pygame.key.get_pressed())
+                    logger.debug(f"Key released {KEYS[event.key]}")
 
             # I want this collision to always be computed.
             if pygame.sprite.collide_rect(self.player, self.current_level.score):
@@ -245,13 +284,16 @@ class Game(Scene):
                 self.current_level.score.show()
 
             if self.current_level.score.won():
-                logger.debug(f'Level {self.current_level.title} won.')
+                logger.debug(f"Level {self.current_level.title} won.")
                 if self.current_level.score.quit_transition():
-                    logger.debug(f'Quit transition.')
-                    self.screen.blit(blur(pygame.display.get_surface(), 1.1), (0, 0, *self.display_size))
+                    logger.debug(f"Quit transition.")
+                    self.screen.blit(
+                        blur(pygame.display.get_surface(), 1.1),
+                        (0, 0, *self.display_size),
+                    )
                     pygame.display.flip()
                 else:
-                    logger.debug(f'Update on WON')
+                    logger.debug(f"Update on WON")
                     self._update_display()
 
                 if not self.current_level.next_level:
@@ -261,10 +303,10 @@ class Game(Scene):
                         self.player_won_sound.play(0, 0, 500)
                         self.all_sprites.add(self.player_won_banner)
                     elif self.current_level.score.is_time_to_leave():
-                        logger.debug(f'is time to leave (for real.)')
+                        logger.debug(f"is time to leave (for real.)")
                         self._stop()
                 elif self.current_level.score.is_time_to_leave():
-                    logger.debug(f'is time to leave (Next level is coming)')
+                    logger.debug(f"is time to leave (Next level is coming)")
                     self.current_level = self.current_level.next_level
                     self._restart()
                 elif self.current_level.announce_win():
@@ -278,7 +320,9 @@ class Game(Scene):
             else:
                 # COLLISIONS ++++++++
                 if self.player.alive():
-                    player_mobs_collide = pygame.sprite.spritecollide(self.player, self.mobs_sprites, dokill=False)
+                    player_mobs_collide = pygame.sprite.spritecollide(
+                        self.player, self.mobs_sprites, dokill=False
+                    )
                     if player_mobs_collide:
                         self.player.kill()
                         self.all_sprites.add(self.player_killed_banner)
@@ -289,8 +333,12 @@ class Game(Scene):
                         for enemy in self.mobs_sprites:
                             enemy.velocity.update(0, 0)
                             enemy.acceleration.update(0.01, 0.01)
-                    elif self.weapon.alive() and self.weapon.brandishing != Weapon.STATIC:
-                        weapon_mobs_collide = pygame.sprite.spritecollide(self.weapon, self.mobs_sprites, dokill=False)
+                    elif (
+                        self.weapon.alive() and self.weapon.brandishing != Weapon.STATIC
+                    ):
+                        weapon_mobs_collide = pygame.sprite.spritecollide(
+                            self.weapon, self.mobs_sprites, dokill=False
+                        )
                         enemy: Enemy
                         for enemy in weapon_mobs_collide:
                             particles = enemy.hurt(self.player.center_position)
@@ -299,8 +347,11 @@ class Game(Scene):
                         # self.weapon.kill()
 
                     bottles_picked = pygame.sprite.spritecollide(
-                        self.player, self.potions_sprites,
-                        dokill=False, collided=pygame.sprite.collide_rect_ratio(0.7))
+                        self.player,
+                        self.potions_sprites,
+                        dokill=False,
+                        collided=pygame.sprite.collide_rect_ratio(0.7),
+                    )
 
                     if bottles_picked:
                         self.bottle_picked.play()
@@ -333,7 +384,7 @@ class TextScene(Scene):
         self.screen = screen
         self.display_size = display_size
         self.main_clock = main_clock
-        self.fnt = pygame.freetype.Font(Path("./assets/fonts/young_serif_regular.otf"), 20)
+        self.fnt = pygame.freetype.Font(constants.FONT_PATH_MAIN, 20)
         self.fnt.pad = True
         self.credits_text = Path(path)
         self.background = background
@@ -350,7 +401,9 @@ class TextScene(Scene):
             lines = credits_file.readlines()
             for line in lines:
                 line = line.strip("\n")
-                line_surface, _ = self.fnt.render(line, fgcolor=pygame.color.Color('white'))
+                line_surface, _ = self.fnt.render(
+                    line, fgcolor=pygame.color.Color("white")
+                )
                 line_rect = self.align(line_surface.get_rect(), last_y)
                 last_y += line_rect.height
                 self.screen.blit(line_surface, line_rect)
@@ -369,12 +422,12 @@ class TextScene(Scene):
 
 class CreditsScene(TextScene):
     def __init__(self, *args, **kwargs):
-        super().__init__(path=Path("./assets/text/credits.txt"), *args, **kwargs)
+        super().__init__(path=constants.TEXT_CREDITS_PATH, *args, **kwargs)
 
 
 class ControlsScene(TextScene):
     def __init__(self, *args, **kwargs):
-        super().__init__(path=Path("./assets/text/controls.txt"), *args, **kwargs)
+        super().__init__(path=constants.TEXT_CONTROLS_PATH, *args, **kwargs)
 
     def align(self, line_rect, last_y):
         line_rect.y += last_y
