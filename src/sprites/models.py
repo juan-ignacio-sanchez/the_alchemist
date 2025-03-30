@@ -15,6 +15,8 @@ import constants
 from sprites.images import load_sprites, load_player_walking
 from transformations import greyscale, redscale, slice_into_particles
 
+logger = logging.getLogger(__name__)
+
 
 class Item(Sprite):
     RED = constants.POTION_RED
@@ -125,8 +127,8 @@ class Walker(Sprite):
         self.skin_source = skin_source
         self.skin = skin
         self.original_image = loader()
-        self.set_skin()
         self.facing = facing
+        self.set_skin()
 
         self.initial_position = initial_position
         self.rect = self.image.get_rect()
@@ -161,6 +163,8 @@ class Walker(Sprite):
             self.image = pygame.transform.scale(
                 self.image, [side * constants.SCALE_FACTOR for side in skin_rect.size]
             )
+            if self.facing == constants.FACING_WEST:
+                self.image = pygame.transform.flip(self.image, True, False)
 
     def apply_force(self, force: Vector2):
         self.acceleration += force
@@ -350,11 +354,12 @@ class Player(Walker):
 
     def change_facing(self, horizontal_direction):
         if horizontal_direction > 0 and not self.facing == constants.FACING_EAST:
+            logger.debug("Should flip facing EAST")
             self.facing = constants.FACING_EAST
-            self.image = pygame.transform.flip(self.image, True, False)
-        elif horizontal_direction <= 0 and not self.facing == constants.FACING_WEST:
+
+        if horizontal_direction <= 0 and not self.facing == constants.FACING_WEST:
+            logger.debug("Should flip facing WEST")
             self.facing = constants.FACING_WEST
-            self.image = pygame.transform.flip(self.image, True, False)
 
     def on_key_pressed(self, event_key, keys):
         if not self.walking:
