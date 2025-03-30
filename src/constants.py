@@ -133,3 +133,8 @@ SFX_PLAYER_WIN = SFX_BASE_PATH / "win_sound.wav"
 SFX_INTERLUDE_WIN = SFX_BASE_PATH / "interlude_win_sound.wav"
 SFX_FOOTSTEPS = SFX_BASE_PATH / "footsteps.mp3"
 SFX_SWORD_BRANDISHING = SFX_BASE_PATH / "sword_brandishing.wav"
+
+# Texts
+TEXTS_BASE_PATH = Path(__file__).parent / "assets/text"
+TEXT_CREDITS_PATH = TEXTS_BASE_PATH / "credits.txt"
+TEXT_CONTROLS_PATH = TEXTS_BASE_PATH / "controls.txt"

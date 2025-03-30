@@ -422,12 +422,12 @@ class TextScene(Scene):
 
 class CreditsScene(TextScene):
     def __init__(self, *args, **kwargs):
-        super().__init__(path=Path("./assets/text/credits.txt"), *args, **kwargs)
+        super().__init__(path=constants.TEXT_CREDITS_PATH, *args, **kwargs)
 
 
 class ControlsScene(TextScene):
     def __init__(self, *args, **kwargs):
-        super().__init__(path=Path("./assets/text/controls.txt"), *args, **kwargs)
+        super().__init__(path=constants.TEXT_CONTROLS_PATH, *args, **kwargs)
 
     def align(self, line_rect, last_y):
         line_rect.y += last_y
