@@ -3,10 +3,10 @@ import os
 import pygame as pg
 from pygame import FULLSCREEN, RESIZABLE, SCALED, DOUBLEBUF, HWACCEL, HWSURFACE
 
-LOG_LEVEL = os.getenv('LOG_LEVEL', default='WARNING')
+LOG_LEVEL = os.getenv("LOG_LEVEL", default="WARNING")
 
 GENERAL_VOLUME = 1
-VOLUME = 0 * GENERAL_VOLUME
+VOLUME = 1 * GENERAL_VOLUME
 SFX_VOLUME = 0.3 * GENERAL_VOLUME
 
 # NOTE: at some point I should be able to remove the SCALED flag, according to this

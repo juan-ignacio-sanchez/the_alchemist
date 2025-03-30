@@ -7,7 +7,9 @@ from pygame.math import Vector2
 def blur(surface: pygame.Surface, level: float) -> pygame.Surface:
     size = surface.get_size()
     scale_size = pygame.math.Vector2(size) / level
-    surface = pygame.transform.smoothscale(surface, (int(scale_size.x), int(scale_size.y)))
+    surface = pygame.transform.smoothscale(
+        surface, (int(scale_size.x), int(scale_size.y))
+    )
     surface = pygame.transform.smoothscale(surface, size)
     return surface
 
@@ -37,11 +39,16 @@ def redscale(surface: pygame.Surface, intensity=2):
     return surface_copy
 
 
-def slice_into_particles(image: pygame.Surface, rect: pygame.Rect,
-                         size: int, skip: int, particle_class: callable,
-                         surface: pygame.Surface,
-                         coloring: callable = lambda x: x,
-                         reference_force_vector: pygame.Vector2 = None):
+def slice_into_particles(
+    image: pygame.Surface,
+    rect: pygame.Rect,
+    size: int,
+    skip: int,
+    particle_class: callable,
+    surface: pygame.Surface,
+    coloring: callable = lambda x: x,
+    reference_force_vector: pygame.Vector2 = None,
+):
     # Slice squares the image apart.
     x_slices = rect.width // size
     y_slices = rect.height // size
@@ -53,14 +60,18 @@ def slice_into_particles(image: pygame.Surface, rect: pygame.Rect,
     for slice_x_position in range(0, x_slices, skip):
         vertical_offset = 0
         for slice in range(0, y_slices, skip):
-            subsurf = image.subsurface(slice_x_position * width, vertical_offset, width, height)
+            subsurf = image.subsurface(
+                slice_x_position * width, vertical_offset, width, height
+            )
             x, y = subsurf.get_offset()
-            particles.append(particle_class(
-                surface=surface,
-                image=subsurf,
-                initial_position=(rect.x + x, rect.y + y),
-                reference_force_vector=reference_force_vector
-            ))
+            particles.append(
+                particle_class(
+                    surface=surface,
+                    image=subsurf,
+                    initial_position=(rect.x + x, rect.y + y),
+                    reference_force_vector=reference_force_vector,
+                )
+            )
             vertical_offset += height * skip
 
     return particles

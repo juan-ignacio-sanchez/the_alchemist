@@ -1,4 +1,5 @@
 import settings
+from pathlib import Path
 
 SCALE_FACTOR = 6
 ITEMS_SCALE_FACTOR = 5
@@ -18,12 +19,9 @@ FACING_WEST = 1
 PLAYER_RECT_OLD_MAN = (98, 224, 12, 16)
 PLAYER_RECT_OLD_MAN_STEP_OUT = (0, 0, 12, 16)
 PLAYER_RECT_OLD_MAN_STEP_IN = (13, 0, 12, 16)
-PLAYER_WALKING_SEQUENCE = [
-    PLAYER_RECT_OLD_MAN_STEP_OUT,
-    PLAYER_RECT_OLD_MAN_STEP_IN
-]
+PLAYER_WALKING_SEQUENCE = [PLAYER_RECT_OLD_MAN_STEP_OUT, PLAYER_RECT_OLD_MAN_STEP_IN]
 
-PLAYER_OLD_MAN = 'OLD_MAN'
+PLAYER_OLD_MAN = "OLD_MAN"
 
 PLAYER_DICT = {
     PLAYER_OLD_MAN: PLAYER_RECT_OLD_MAN,
@@ -59,9 +57,7 @@ MOBS_DICT = {
     MOB_TALL_DEVIL: MOB_RECT_TALL_DEVIL,
 }
 
-MOBS = [
-    'BLOOD_CRYING_MOB'
-]
+MOBS = ["BLOOD_CRYING_MOB"]
 
 GREEN_LIQUID_ITEM = (133, 212, 7, 11)
 WIDE_GREEN_LIQUID_ITEM = (196, 196, 9, 11)
@@ -104,22 +100,36 @@ UI_BOX_BACKGROUND = (80, 104, 24, 24)
 UI_BOX_BACKGROUND_COLOR_PAPYRUS = (211, 191, 169)
 UI_BOX_TEXT_COLOR_PAPYRUS = (71, 58, 57)
 
+# Fonts
+FONTS_BASE_PATH = Path(__file__).parent / "assets/fonts"
+FONT_PATH_PAUSED = FONTS_BASE_PATH / "young_serif_regular.otf"
+FONT_PATH_HELPER = FONTS_BASE_PATH / "young_serif_regular.otf"
+FONT_PATH_MAIN = FONTS_BASE_PATH / "young_serif_regular.otf"
+FONT_PATH_SECONDARY = FONTS_BASE_PATH / "young_serif_regular.otf"
+
 # Sprites
-SPRITES_PATH = "./assets/sprites/sprites.png"
-SPRITES_UI_PATH = "./assets/sprites/sprites_ui.png"
-SPRITES_PLAYER_WALKING = "./assets/sprites/old_man_walking.png"
+SPRITES_BASE_PATH = Path(__file__).parent / "assets/sprites"
+SPRITES_PATH = SPRITES_BASE_PATH / "sprites.png"
+SPRITES_UI_PATH = SPRITES_BASE_PATH / "sprites_ui.png"
+SPRITES_PLAYER_WALKING = SPRITES_BASE_PATH / "old_man_walking.png"
 
 # Sound
-BACKGROUND_SOUND = "./assets/sounds/background/Guitar-Mayhem-6" + settings.AUDIO_EXTENSION
-ENDING_SOUND = "assets/sounds/ending" + settings.AUDIO_EXTENSION
-MAIN_MENU_SOUND = "assets/sounds/main_menu" + settings.AUDIO_EXTENSION
+
+SOUNDS_BASE_PATH = Path(__file__).parent / "assets/sounds"
+BACKGROUND_SOUND = (
+    SOUNDS_BASE_PATH / f"background/Guitar-Mayhem-6{settings.AUDIO_EXTENSION}"
+)
+ENDING_SOUND = SOUNDS_BASE_PATH / f"ending{settings.AUDIO_EXTENSION}"
+MAIN_MENU_SOUND = SOUNDS_BASE_PATH / f"main_menu{settings.AUDIO_EXTENSION}"
 
 # SFX
-BOTTLE_PICKED_SFX = "assets/sounds/sfx/bottle_picked.wav"
-PLAYER_KILLED_SFX = "assets/sounds/sfx/kill.wav"
-WALL_HIT_SFX = "assets/sounds/sfx/boundary_hit.wav"
-MENU_ITEM_CHANGED_SFX = "./assets/sounds/sfx/menu_item_changed.wav"
-ENEMY_KILLED_SFX = "./assets/sounds/sfx/banishing.wav"
-PLAYER_WIN_SFX = "./assets/sounds/sfx/win_sound.wav"
-INTERLUDE_WIN_SFX = "./assets/sounds/sfx/interlude_win_sound.wav"
-FOOTSTEPS_SFX = "./assets/sounds/sfx/footsteps.mp3"
+SFX_BASE_PATH = SOUNDS_BASE_PATH / "sfx"
+SFX_BOTTLE_PICKED = SFX_BASE_PATH / "bottle_picked.wav"
+SFX_PLAYER_KILLED = SFX_BASE_PATH / "kill.wav"
+SFX_WALL_HIT = SFX_BASE_PATH / "boundary_hit.wav"
+SFX_MENU_ITEM_CHANGED = SFX_BASE_PATH / "menu_item_changed.wav"
+SFX_ENEMY_KILLED = SFX_BASE_PATH / "banishing.wav"
+SFX_PLAYER_WIN = SFX_BASE_PATH / "win_sound.wav"
+SFX_INTERLUDE_WIN = SFX_BASE_PATH / "interlude_win_sound.wav"
+SFX_FOOTSTEPS = SFX_BASE_PATH / "footsteps.mp3"
+SFX_SWORD_BRANDISHING = SFX_BASE_PATH / "sword_brandishing.wav"

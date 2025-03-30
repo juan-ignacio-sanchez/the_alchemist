@@ -13,7 +13,8 @@ from scenes import Game, CreditsScene, ControlsScene
 from sprites.ui import MainMenu
 from transformations import greyscale
 
-Size = namedtuple('Size', ['width', 'height'])
+Size = namedtuple("Size", ["width", "height"])
+logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
 
 
 def main():
@@ -26,18 +27,24 @@ def main():
 
     if not sys.platform.startswith("linux"):
         if 0 != pygame.display.mode_ok(display_size, flags=settings.DISPLAY_MODE_FULL):
-            screen = pygame.display.set_mode(display_size, settings.DISPLAY_MODE_FULL, vsync=1)
+            screen = pygame.display.set_mode(
+                display_size, settings.DISPLAY_MODE_FULL, vsync=1
+            )
         else:
-            screen = pygame.display.set_mode(display_size, settings.DISPLAY_MODE_WIND, vsync=1)
+            screen = pygame.display.set_mode(
+                display_size, settings.DISPLAY_MODE_WIND, vsync=1
+            )
     else:
         # Unfortunately, for the moment I have to use windowed session on Linux because a bug in PyGame2
-        screen = pygame.display.set_mode(display_size, settings.DISPLAY_MODE_WIND, vsync=0)
+        screen = pygame.display.set_mode(
+            display_size, settings.DISPLAY_MODE_WIND, vsync=0
+        )
 
     # Scenes (Main Menu, Credits, Game itself...)
     game = Game(screen, display_size, main_clock)
 
     menu_background = greyscale(game.background)
-    main_menu_sound = pygame.mixer.Sound(Path(MAIN_MENU_SOUND))
+    main_menu_sound = pygame.mixer.Sound(MAIN_MENU_SOUND)
     main_menu_sound.set_volume(settings.VOLUME)
     main_menu_sound.play(loops=-1)
 
@@ -96,13 +103,13 @@ def main():
     pygame.quit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(
-        format='%(asctime)s | %(message)s',
-        datefmt='%m/%d/%Y %I:%M:%S %p',
+        format="%(asctime)s | %(message)s",
+        datefmt="%m/%d/%Y %I:%M:%S %p",
         level=getattr(logging, settings.LOG_LEVEL),
-        filename=Path('./thealchemist.log'),
-        filemode='w',
+        filename=Path("./thealchemist.log"),
+        filemode="w",
     )
     if hasattr(sys, "_MEIPASS"):
         os.chdir(sys._MEIPASS)
